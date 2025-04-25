@@ -186,129 +186,188 @@ const FetchResults = () => {
 
             {/* Display weekly results for each class or only the selected class */}
             {(() => {
-              // Get all results for the selected week
-              const weekResults =
-                results?.Competition?.SubCompetitions[selectedWeek]?.Results ||
-                [];
+              // Check if we have the 2022 TourResults format
+              const hasTourResults =
+                results?.Competition?.TourResults &&
+                results?.Competition?.Events;
 
-              // Group by class or filter by selected class
-              const classResults = selectedClass
-                ? {
-                    [selectedClass]: weekResults.filter(
-                      (p) => p.ClassName === selectedClass
-                    ),
-                  }
-                : weekResults.reduce((acc, player) => {
-                    const className = player.ClassName || "Unknown";
-                    if (!acc[className]) acc[className] = [];
-                    acc[className].push(player);
-                    return acc;
-                  }, {});
+              let classResults = {};
 
-              return Object.entries(classResults).map(
-                ([className, players]) => (
-                  <div key={className} className="mb-8">
-                    <h3 className="text-xl font-semibold mb-3 bg-gray-200 p-2 rounded">
-                      {className}
-                    </h3>
-                    <table className="table-fixed border-collapse border border-gray-400 w-full">
-                      <thead>
-                        <tr>
-                          <th className="border px-4 py-2 text-center w-[5%]">
-                            Place
-                          </th>
-                          <th className="border px-4 py-2 w-[15%]">Player</th>
-                          {/* Display column headers for each hole */}
-                          {Array.from({ length: 18 }).map((_, index) => (
-                            <th
-                              key={index}
-                              className="border px-1 py-1 text-center font-medium"
-                              style={{ width: "3.3%" }}
-                            >
-                              {index + 1}
-                            </th>
-                          ))}
-                          <th className="border px-4 py-2 text-center w-[5%]">
-                            +/-
-                          </th>
-                          <th className="border px-4 py-2 text-center w-[5%]">
-                            Total
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {players.length > 0 ? (
-                          players.map((player) => {
-                            // Extract hole scores from player data if available
-                            const holeResults = player.PlayerResults
-                              ? [...player.PlayerResults]
-                              : [];
+              if (hasTourResults) {
+                // For 2022 TourResults format
+                const eventIdForSelectedWeek =
+                  results.Competition.Events[selectedWeek]?.ID;
 
-                            return (
-                              <tr key={player.UserID}>
-                                <td className="border px-4 py-2 text-center">
-                                  {player.Place}
-                                </td>
-                                <td className="border px-4 py-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">
-                                  {player.Name}
-                                </td>
+                if (!eventIdForSelectedWeek) {
+                  return (
+                    <div className="text-center py-4">
+                      <p className="text-amber-500">
+                        Weekly results for 2022 cannot be displayed in the same
+                        format due to changes in the API.
+                      </p>
+                      <p className="mt-2">
+                        Please use the Overall view to see player standings and
+                        performance.
+                      </p>
+                    </div>
+                  );
+                }
 
-                                {/* Display individual hole scores */}
-                                {Array.from({ length: 18 }).map((_, index) => {
-                                  // Access the hole result if available (holes are in order in the array)
-                                  const holeData = holeResults[index];
-                                  const score = holeData?.Result;
-                                  const diff = holeData?.Diff;
+                // We could try to fetch the specific event details here with the eventId
+                // but it would require another API call that might not even work
 
-                                  // Add color based on score relative to par (using Diff property)
-                                  let bgColor = "";
-
-                                  if (diff !== undefined) {
-                                    if (diff < 0) bgColor = "bg-green-200";
-                                    // Under par (birdie or better)
-                                    else if (diff > 0) bgColor = "bg-red-200"; // Over par (bogey or worse)
-
-                                    // Special case: hole-in-one (ace) always gets priority
-                                    if (score === "1") {
-                                      bgColor = "bg-yellow-300";
-                                    }
-                                  }
-
-                                  return (
-                                    <td
-                                      key={index}
-                                      className={`border px-2 py-1 text-center ${bgColor}`}
-                                    >
-                                      {score !== undefined ? score : "-"}
-                                    </td>
-                                  );
-                                })}
-
-                                <td className="border px-4 py-2 text-center">
-                                  {player.Diff}
-                                </td>
-                                <td className="border px-4 py-2 text-center">
-                                  {player.Sum}
-                                </td>
-                              </tr>
-                            );
-                          })
-                        ) : (
-                          <tr>
-                            <td
-                              colSpan="22"
-                              className="border px-4 py-2 text-center"
-                            >
-                              No results available for {className} in week{" "}
-                              {selectedWeek + 1}.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                return (
+                  <div className="text-center py-4">
+                    <p className="text-amber-500">
+                      Weekly results for 2022 cannot be displayed in the same
+                      format due to changes in the API.
+                    </p>
+                    <p className="mt-2">
+                      Please use the Overall view to see player standings and
+                      performance.
+                    </p>
+                    <p className="mt-2">
+                      For detailed weekly results, visit:{" "}
+                      <a
+                        href={`https://discgolfmetrix.com/${eventIdForSelectedWeek}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        Week {selectedWeek + 1} on Disc Golf Metrix
+                      </a>
+                    </p>
                   </div>
-                )
-              );
+                );
+              } else {
+                // Standard format for other years
+                // Get all results for the selected week
+                const weekResults =
+                  results?.Competition?.SubCompetitions[selectedWeek]
+                    ?.Results || [];
+
+                // Group by class or filter by selected class
+                classResults = selectedClass
+                  ? {
+                      [selectedClass]: weekResults.filter(
+                        (p) => p.ClassName === selectedClass
+                      ),
+                    }
+                  : weekResults.reduce((acc, player) => {
+                      const className = player.ClassName || "Unknown";
+                      if (!acc[className]) acc[className] = [];
+                      acc[className].push(player);
+                      return acc;
+                    }, {});
+
+                return Object.entries(classResults).map(
+                  ([className, players]) => (
+                    <div key={className} className="mb-8">
+                      <h3 className="text-xl font-semibold mb-3 bg-gray-200 p-2 rounded">
+                        {className}
+                      </h3>
+                      <table className="table-fixed border-collapse border border-gray-400 w-full">
+                        <thead>
+                          <tr>
+                            <th className="border px-4 py-2 text-center w-[5%]">
+                              Place
+                            </th>
+                            <th className="border px-4 py-2 w-[15%]">Player</th>
+                            {/* Display column headers for each hole */}
+                            {Array.from({ length: 18 }).map((_, index) => (
+                              <th
+                                key={index}
+                                className="border px-1 py-1 text-center font-medium"
+                                style={{ width: "3.3%" }}
+                              >
+                                {index + 1}
+                              </th>
+                            ))}
+                            <th className="border px-4 py-2 text-center w-[5%]">
+                              +/-
+                            </th>
+                            <th className="border px-4 py-2 text-center w-[5%]">
+                              Total
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {players.length > 0 ? (
+                            players.map((player) => {
+                              // Extract hole scores from player data if available
+                              const holeResults = player.PlayerResults
+                                ? [...player.PlayerResults]
+                                : [];
+
+                              return (
+                                <tr key={player.UserID}>
+                                  <td className="border px-4 py-2 text-center">
+                                    {player.Place}
+                                  </td>
+                                  <td className="border px-4 py-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">
+                                    {player.Name}
+                                  </td>
+
+                                  {/* Display individual hole scores */}
+                                  {Array.from({ length: 18 }).map(
+                                    (_, index) => {
+                                      // Access the hole result if available (holes are in order in the array)
+                                      const holeData = holeResults[index];
+                                      const score = holeData?.Result;
+                                      const diff = holeData?.Diff;
+
+                                      // Add color based on score relative to par (using Diff property)
+                                      let bgColor = "";
+
+                                      if (diff !== undefined) {
+                                        if (diff < 0) bgColor = "bg-green-200";
+                                        // Under par (birdie or better)
+                                        else if (diff > 0)
+                                          bgColor = "bg-red-200"; // Over par (bogey or worse)
+
+                                        // Special case: hole-in-one (ace) always gets priority
+                                        if (score === "1") {
+                                          bgColor = "bg-yellow-300";
+                                        }
+                                      }
+
+                                      return (
+                                        <td
+                                          key={index}
+                                          className={`border px-2 py-1 text-center ${bgColor}`}
+                                        >
+                                          {score !== undefined ? score : "-"}
+                                        </td>
+                                      );
+                                    }
+                                  )}
+
+                                  <td className="border px-4 py-2 text-center">
+                                    {player.Diff}
+                                  </td>
+                                  <td className="border px-4 py-2 text-center">
+                                    {player.Sum}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr>
+                              <td
+                                colSpan="22"
+                                className="border px-4 py-2 text-center"
+                              >
+                                No results available for {className} in week{" "}
+                                {selectedWeek + 1}.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+                );
+              }
             })()}
           </div>
         </div>

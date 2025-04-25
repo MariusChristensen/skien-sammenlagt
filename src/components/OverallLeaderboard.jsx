@@ -13,7 +13,7 @@ const OverallLeaderboard = ({
   const MAX_COUNTING_COMPETITIONS = 11;
 
   // Minimum number of columns to display (for visual consistency)
-  const MIN_COMPETITIONS_DISPLAY = 22;
+  const MIN_COMPETITIONS_DISPLAY = 20;
 
   // Function to calculate points based on placement
   const calculatePoints = (place) => {
