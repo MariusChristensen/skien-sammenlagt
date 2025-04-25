@@ -1,0 +1,464 @@
+import { useEffect, useState } from "react";
+
+const OverallLeaderboard = ({
+  results,
+  selectedClass = null,
+  selectedYear = "2025",
+}) => {
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
+  const [maxCompetitions, setMaxCompetitions] = useState(22);
+
+  // Maximum number of competitions that count toward the total
+  const MAX_COUNTING_COMPETITIONS = 11;
+
+  // Minimum number of columns to display (for visual consistency)
+  const MIN_COMPETITIONS_DISPLAY = 22;
+
+  // Function to calculate points based on placement
+  const calculatePoints = (place) => {
+    if (place === 1) return 50;
+    if (place === 2) return 45;
+    if (place === 3) return 40;
+    if (place === 4) return 38;
+
+    // After 4th place, decrease by 2 points until reaching 10
+    let points = 38 - (place - 4) * 2;
+
+    // If points are 10 or less, decrease by 1 point per place
+    if (points <= 10) {
+      // Calculate how many places after reaching 10 points
+      const placeAt10Points = Math.floor((38 - 10) / 2) + 4;
+      points = 10 - (place - placeAt10Points);
+    }
+
+    return Math.max(0, points); // Ensure no negative points
+  };
+
+  useEffect(() => {
+    // Handle responsive design
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!results?.Competition) return;
+
+    let playerScores = {};
+    let eventCount = 0;
+
+    // Check which data format we have - TourResults or SubCompetitions
+    const hasTourResults =
+      results.Competition.TourResults &&
+      results.Competition.TourResults.length > 0;
+
+    const hasSubCompetitions =
+      results.Competition.SubCompetitions &&
+      results.Competition.SubCompetitions.length > 0;
+
+    // Get number of events from the data
+    if (hasTourResults && results.Competition.Events) {
+      // TourResults format (2022)
+      const events = results.Competition.Events;
+      eventCount = events.length;
+
+      // Keep track of merged players to ensure we use consistent names
+      const mergedPlayerNames = {};
+
+      // First pass - gather all names for each UserID
+      results.Competition.TourResults.forEach((player) => {
+        if (player.UserID) {
+          if (!mergedPlayerNames[player.UserID]) {
+            mergedPlayerNames[player.UserID] = [];
+          }
+          mergedPlayerNames[player.UserID].push(player.Name);
+        }
+      });
+
+      // Choose the longest name for each player (usually the most complete name)
+      Object.keys(mergedPlayerNames).forEach((userId) => {
+        mergedPlayerNames[userId] = mergedPlayerNames[userId].reduce(
+          (longest, current) =>
+            current.length > longest.length ? current : longest,
+          ""
+        );
+      });
+
+      // We need to process each event separately
+      // First, initialize player objects
+      results.Competition.TourResults.forEach((player) => {
+        if (!player.UserID) return; // Skip players without UserID
+
+        const playerID = player.UserID;
+        const playerClass = player.ClassName || "Unknown";
+
+        // Skip if filtering by class and this player is in a different class
+        if (selectedClass && playerClass !== selectedClass) return;
+
+        // Use the consistent name for this player
+        const playerName = mergedPlayerNames[playerID] || player.Name;
+
+        // Initialize player in our tracking object
+        if (!playerScores[playerID]) {
+          playerScores[playerID] = {
+            name: playerName,
+            id: playerID,
+            class: playerClass,
+            weeklyPoints: Array(eventCount).fill(0),
+            weeklyPointsInfo: Array(eventCount).fill({
+              points: 0,
+              counts: false,
+            }),
+            totalPoints: 0,
+            // Store raw scores for processing
+            rawScores: Array(eventCount).fill(null),
+          };
+        }
+
+        // Merge the scores from this entry with existing scores
+        if (player.EventResults) {
+          player.EventResults.forEach((result, weekIndex) => {
+            if (weekIndex < eventCount && result !== null) {
+              playerScores[playerID].rawScores[weekIndex] = result;
+            }
+          });
+        }
+      });
+
+      // Now calculate points for each event based on player placement
+      events.forEach((event, eventIndex) => {
+        // Get all players who participated in this event
+        const eventParticipants = Object.values(playerScores)
+          .filter(
+            (player) =>
+              player.rawScores && player.rawScores[eventIndex] !== null
+          )
+          .map((player) => ({
+            id: player.id,
+            score: player.rawScores[eventIndex],
+          }));
+
+        // Sort participants by score (lower is better)
+        eventParticipants.sort((a, b) => a.score - b.score);
+
+        // Assign points based on placement
+        eventParticipants.forEach((participant, index) => {
+          const place = index + 1;
+          const points = calculatePoints(place);
+
+          if (playerScores[participant.id]) {
+            playerScores[participant.id].weeklyPoints[eventIndex] = points;
+            playerScores[participant.id].weeklyPointsInfo[eventIndex] = {
+              points,
+              counts: false,
+            };
+          }
+        });
+      });
+
+      // Clean up the raw scores which we no longer need
+      Object.values(playerScores).forEach((player) => {
+        delete player.rawScores;
+      });
+    } else if (hasSubCompetitions) {
+      // SubCompetitions format (other years)
+      const subCompetitions = results.Competition.SubCompetitions;
+      eventCount = subCompetitions.length;
+
+      // Process each subcompetition (weekly event)
+      subCompetitions.forEach((competition, weekIndex) => {
+        if (!competition.Results) return;
+
+        // Calculate points for each player in this week
+        competition.Results.forEach((player) => {
+          const playerName = player.Name;
+          const playerID = player.UserID;
+          const playerClass = player.ClassName || "Unknown";
+          const points = calculatePoints(player.Place);
+
+          // Skip if filtering by class and this player is in a different class
+          if (selectedClass && playerClass !== selectedClass) return;
+
+          // Initialize player in our tracking object if first encounter
+          if (!playerScores[playerID]) {
+            playerScores[playerID] = {
+              name: playerName,
+              id: playerID,
+              class: playerClass,
+              weeklyPoints: Array(eventCount).fill(0),
+              weeklyPointsInfo: Array(eventCount).fill({
+                points: 0,
+                counts: false,
+              }),
+              totalPoints: 0,
+            };
+          }
+
+          // Add points for this week
+          playerScores[playerID].weeklyPoints[weekIndex] = points;
+          playerScores[playerID].weeklyPointsInfo[weekIndex] = {
+            points: points,
+            counts: false, // Initially mark as not counting, we'll update this later
+          };
+        });
+      });
+    } else {
+      // No data available in a format we understand
+      console.warn("No competition data found in a recognized format");
+      setLeaderboard([]);
+      setMaxCompetitions(MIN_COMPETITIONS_DISPLAY);
+      return;
+    }
+
+    // Update maxCompetitions state
+    setMaxCompetitions(Math.max(eventCount, MIN_COMPETITIONS_DISPLAY));
+
+    // Calculate total points using best 11 results for each player
+    Object.values(playerScores).forEach((player) => {
+      // Create array of point objects with week index and points value
+      const pointsWithIndices = player.weeklyPointsInfo
+        .map((info, index) => ({ index, points: info.points }))
+        .filter((item) => item.points > 0); // Only include weeks with points
+
+      // Sort by points (descending)
+      pointsWithIndices.sort((a, b) => b.points - a.points);
+
+      // Determine which results count (top 11 or all if less than 11)
+      const countingResults = Math.min(
+        MAX_COUNTING_COMPETITIONS,
+        pointsWithIndices.length
+      );
+      let total = 0;
+
+      // Mark all as not counting initially
+      player.weeklyPointsInfo.forEach((info, index) => {
+        player.weeklyPointsInfo[index] = { ...info, counts: false };
+      });
+
+      // Mark the top counting results and sum them
+      for (let i = 0; i < countingResults; i++) {
+        const { index, points } = pointsWithIndices[i];
+        player.weeklyPointsInfo[index] = {
+          ...player.weeklyPointsInfo[index],
+          counts: true,
+        };
+        total += points;
+      }
+
+      player.totalPoints = total;
+    });
+
+    // Convert to array and sort by total points (descending)
+    const leaderboardArray = Object.values(playerScores).sort(
+      (a, b) => b.totalPoints - a.totalPoints
+    );
+
+    setLeaderboard(leaderboardArray);
+  }, [results, selectedClass]);
+
+  if (!results) return null;
+
+  // Get the actual week count from data
+  const actualWeekCount =
+    results?.Competition?.SubCompetitions?.length ||
+    results?.Competition?.Events?.length ||
+    0;
+
+  // Use the larger of actual week count or minimum display count or maxCompetitions
+  const displayWeekCount = Math.max(
+    actualWeekCount,
+    MIN_COMPETITIONS_DISPLAY,
+    maxCompetitions
+  );
+
+  // Group players by class if no specific class is selected
+  const groupedLeaderboards = !selectedClass
+    ? leaderboard.reduce((groups, player) => {
+        const playerClass = player.class;
+        if (!groups[playerClass]) {
+          groups[playerClass] = [];
+        }
+        groups[playerClass].push(player);
+        return groups;
+      }, {})
+    : { [selectedClass]: leaderboard };
+
+  const renderMobileView = (className, players) => (
+    <div className="space-y-4">
+      {players.map((player, index) => (
+        <div
+          key={player.id}
+          className={`border rounded-lg p-3 shadow-sm ${
+            index % 2 === 0 ? "bg-white" : "bg-gray-50"
+          }`}
+        >
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center">
+              <span className="font-bold text-lg mr-2">{index + 1}</span>
+              <span className="font-medium">{player.name}</span>
+            </div>
+            <div className="bg-gray-100 font-bold text-lg px-3 py-1 rounded">
+              {player.totalPoints}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2 mt-3">
+            {Array.from({ length: displayWeekCount }).map((_, idx) => {
+              // Check if this week has data
+              const weekInfo =
+                idx < player.weeklyPointsInfo.length
+                  ? player.weeklyPointsInfo[idx]
+                  : { points: 0, counts: false };
+
+              return (
+                <div
+                  key={idx}
+                  className={`text-center p-1 border rounded ${
+                    weekInfo.points > 0 && !weekInfo.counts
+                      ? "bg-red-100"
+                      : weekInfo.counts
+                      ? "bg-green-50 border-green-200"
+                      : ""
+                  }`}
+                >
+                  <div className="text-xs text-gray-500">Week {idx + 1}</div>
+                  <div>{weekInfo.points || "-"}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {players.length === 0 && (
+        <div className="py-4 text-center text-gray-500">
+          No results available for {className}.
+        </div>
+      )}
+    </div>
+  );
+
+  const renderDesktopView = (className, players) => (
+    <div className="relative overflow-x-auto border border-gray-300 rounded-lg shadow">
+      <table className="w-full border-collapse">
+        <thead className="bg-gray-50 sticky top-0">
+          <tr>
+            <th className="py-3 px-4 text-center font-semibold text-gray-700 w-16 border-r border-gray-300 sticky left-0 bg-gray-50 z-20">
+              Rank
+            </th>
+            <th className="py-3 px-4 text-left font-semibold text-gray-700 w-52 border-r border-gray-300 sticky left-16 bg-gray-50 z-20">
+              Player
+            </th>
+
+            {Array.from({ length: displayWeekCount }).map((_, index) => (
+              <th
+                key={index}
+                className={`py-3 px-2 text-center font-semibold text-gray-700 min-w-[50px] border-r border-gray-300 ${
+                  index < actualWeekCount ? "" : "bg-gray-50 text-gray-400"
+                }`}
+              >
+                {index + 1}
+              </th>
+            ))}
+
+            <th className="py-3 px-4 text-center font-semibold text-gray-700 min-w-[100px] bg-gray-100 sticky right-0 z-10 border-l border-gray-300">
+              Total
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white">
+          {players.length > 0 ? (
+            players.map((player, index) => (
+              <tr
+                key={player.id}
+                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+              >
+                <td
+                  className="py-3 px-4 text-center border-r border-gray-300 sticky left-0 z-10"
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "white" : "#f9fafb",
+                  }}
+                >
+                  {index + 1}
+                </td>
+                <td
+                  className="py-3 px-4 text-left whitespace-nowrap overflow-hidden text-ellipsis border-r border-gray-300 sticky left-16 z-10"
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "white" : "#f9fafb",
+                  }}
+                >
+                  {player.name}
+                </td>
+
+                {Array.from({ length: displayWeekCount }).map((_, idx) => {
+                  // Use actual data for weeks that exist, placeholders for future weeks
+                  const info =
+                    idx < player.weeklyPointsInfo.length
+                      ? player.weeklyPointsInfo[idx]
+                      : { points: 0, counts: false };
+
+                  return (
+                    <td
+                      key={idx}
+                      className={`py-3 px-2 text-center border-r border-gray-300 ${
+                        info.points > 0 && !info.counts
+                          ? "bg-red-100"
+                          : info.counts
+                          ? "bg-green-50"
+                          : idx >= actualWeekCount
+                          ? "text-gray-300"
+                          : ""
+                      }`}
+                    >
+                      {idx < actualWeekCount ? info.points || "-" : "-"}
+                    </td>
+                  );
+                })}
+
+                <td className="py-3 px-4 text-center font-bold bg-gray-100 sticky right-0 z-10 border-l border-gray-300">
+                  {player.totalPoints}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td
+                colSpan={displayWeekCount + 3}
+                className="py-4 px-4 text-center text-gray-500"
+              >
+                No results available for {className}.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <div className="w-full">
+      <h2 className="text-2xl font-semibold mb-4">
+        Overall Leaderboard {selectedYear}
+      </h2>
+
+      {/* Show leaderboards for each class */}
+      {Object.entries(groupedLeaderboards).map(([className, players]) => (
+        <div key={className} className="mb-10">
+          <h3 className="text-xl font-semibold mb-3 bg-gray-200 p-2 rounded">
+            {className}
+          </h3>
+
+          {isMobileView
+            ? renderMobileView(className, players)
+            : renderDesktopView(className, players)}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default OverallLeaderboard;
