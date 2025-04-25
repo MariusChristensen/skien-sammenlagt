@@ -7,10 +7,7 @@ const OverallLeaderboard = ({
 }) => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
-  const [maxCompetitions, setMaxCompetitions] = useState(22);
-
-  // Maximum number of competitions that count toward the total
-  const MAX_COUNTING_COMPETITIONS = 11;
+  const [maxCompetitions, setMaxCompetitions] = useState(20);
 
   // Minimum number of columns to display (for visual consistency)
   const MIN_COMPETITIONS_DISPLAY = 20;
@@ -217,7 +214,7 @@ const OverallLeaderboard = ({
     // Update maxCompetitions state
     setMaxCompetitions(Math.max(eventCount, MIN_COMPETITIONS_DISPLAY));
 
-    // Calculate total points using best 11 results for each player
+    // Calculate total points using best 50% of competitions for each player
     Object.values(playerScores).forEach((player) => {
       // Create array of point objects with week index and points value
       const pointsWithIndices = player.weeklyPointsInfo
@@ -227,9 +224,12 @@ const OverallLeaderboard = ({
       // Sort by points (descending)
       pointsWithIndices.sort((a, b) => b.points - a.points);
 
-      // Determine which results count (top 11 or all if less than 11)
+      // Calculate number of counting competitions (50% of total competitions)
+      const countingCompetitions = Math.floor(eventCount * 0.5);
+
+      // Determine which results count (50% or all if fewer than 50%)
       const countingResults = Math.min(
-        MAX_COUNTING_COMPETITIONS,
+        countingCompetitions,
         pointsWithIndices.length
       );
       let total = 0;
