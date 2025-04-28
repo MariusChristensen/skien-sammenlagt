@@ -46,7 +46,9 @@ const WeeklyResultsTable = ({ players, className, selectedWeek }) => (
                   let bgColor = "";
                   if (diff !== undefined) {
                     if (diff < 0) bgColor = "bg-green-200";
-                    else if (diff > 0) bgColor = "bg-red-200";
+                    else if (diff === 1) bgColor = "bg-red-100";
+                    else if (diff === 2) bgColor = "bg-red-300";
+                    else if (diff >= 3) bgColor = "bg-red-500";
                     if (score === "1") bgColor = "bg-yellow-300";
                   }
                   return (

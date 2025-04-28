@@ -1,7 +1,7 @@
 import React from "react";
 
 const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
-  <div className="space-y-4">
+  <div className="space-y-4 max-w-xl mx-auto">
     {players.length > 0 ? (
       players.map((player, idx) => {
         const holeResults = player.PlayerResults
@@ -29,29 +29,66 @@ const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
               </div>
             </div>
             <div className="overflow-x-auto">
-              <div className="flex space-x-1 min-w-[600px]">
-                {Array.from({ length: 18 }).map((_, hIdx) => {
-                  const holeData = holeResults[hIdx];
-                  const score = holeData?.Result;
-                  const diff = holeData?.Diff;
-                  let bgColor = "";
-                  if (diff !== undefined) {
-                    if (diff < 0) bgColor = "bg-green-200";
-                    else if (diff > 0) bgColor = "bg-red-200";
-                    if (score === "1") bgColor = "bg-yellow-300";
-                  }
-                  return (
-                    <div
-                      key={hIdx}
-                      className={`w-8 h-8 flex flex-col items-center justify-center border rounded ${bgColor}`}
-                    >
-                      <span className="text-xs text-gray-500">{hIdx + 1}</span>
-                      <span className="font-semibold">
-                        {score !== undefined ? score : "-"}
-                      </span>
-                    </div>
-                  );
-                })}
+              <div className="flex flex-col gap-1">
+                {/* First row: holes 1-9 */}
+                <div className="flex space-x-1 min-w-0">
+                  {Array.from({ length: 9 }).map((_, hIdx) => {
+                    const holeData = holeResults[hIdx];
+                    const score = holeData?.Result;
+                    const diff = holeData?.Diff;
+                    let bgColor = "";
+                    if (diff !== undefined) {
+                      if (diff < 0) bgColor = "bg-green-200";
+                      else if (diff === 1) bgColor = "bg-red-100";
+                      else if (diff === 2) bgColor = "bg-red-300";
+                      else if (diff >= 3) bgColor = "bg-red-500";
+                      if (score === "1") bgColor = "bg-yellow-300";
+                    }
+                    return (
+                      <div
+                        key={hIdx}
+                        className={`flex-1 aspect-square flex flex-col items-center justify-center border rounded min-w-0 ${bgColor}`}
+                      >
+                        <span className="text-xs text-gray-500">
+                          {hIdx + 1}
+                        </span>
+                        <span className="font-semibold">
+                          {score !== undefined ? score : "-"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Second row: holes 10-18 */}
+                <div className="flex space-x-1 min-w-0">
+                  {Array.from({ length: 9 }).map((_, hIdx) => {
+                    const holeIndex = hIdx + 9;
+                    const holeData = holeResults[holeIndex];
+                    const score = holeData?.Result;
+                    const diff = holeData?.Diff;
+                    let bgColor = "";
+                    if (diff !== undefined) {
+                      if (diff < 0) bgColor = "bg-green-200";
+                      else if (diff === 1) bgColor = "bg-red-100";
+                      else if (diff === 2) bgColor = "bg-red-300";
+                      else if (diff >= 3) bgColor = "bg-red-500";
+                      if (score === "1") bgColor = "bg-yellow-300";
+                    }
+                    return (
+                      <div
+                        key={holeIndex}
+                        className={`flex-1 aspect-square flex flex-col items-center justify-center border rounded min-w-0 ${bgColor}`}
+                      >
+                        <span className="text-xs text-gray-500">
+                          {holeIndex + 1}
+                        </span>
+                        <span className="font-semibold">
+                          {score !== undefined ? score : "-"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
