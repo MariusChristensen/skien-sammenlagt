@@ -17,15 +17,27 @@ const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center">
                 <span className="font-bold text-lg mr-2">{player.Place}</span>
-                <span className="font-medium truncate max-w-[120px]">
+                <span className="font-medium flex-1 truncate">
                   {player.Name}
                 </span>
               </div>
-              <div className="flex flex-col items-end">
+              <div className="flex flex-col items-center">
                 <span className="bg-gray-100 font-bold text-lg px-3 py-1 rounded mb-1">
                   {player.Sum}
                 </span>
-                <span className="text-xs text-gray-500">+/- {player.Diff}</span>
+                <span
+                  className={`relative-score-pill text-xs font-bold px-3 py-1 rounded
+                    ${
+                      player.Diff > 0
+                        ? "bg-red-500 text-white"
+                        : player.Diff < 0
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-300 text-gray-800"
+                    }
+                  `}
+                >
+                  {player.Diff > 0 ? `+${player.Diff}` : player.Diff}
+                </span>
               </div>
             </div>
             <div className="overflow-x-auto">

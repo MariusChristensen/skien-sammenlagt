@@ -1,5 +1,9 @@
 # Skien Frisbeeklubb - Ukegolf Sammenlagt TODO
 
+## 🥇 Top Priority
+
+- [ ] Add React Router and refactor to multi-page app structure
+
 ## 🎨 Styling & UI Enhancements
 
 - [ ] Implement a dark mode toggle
