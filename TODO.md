@@ -4,7 +4,7 @@
 
 - [ ] Implement a dark mode toggle
 - [ ] Add player profile images (if available in API)
-- [ ] Improve mobile cards with expandable weekly detail view
+- [ ] Improve mobile cards with two-row weekly hole layout (major readability improvement)
 - [ ] Add animations for score changes between weeks
 - [ ] Create a loading skeleton for better UX during data fetching
 
@@ -49,3 +49,7 @@
   - 2020: "1222406"
 - Maximum counting competitions: 50% of total competitions
 - Display at least 20 weeks for visual consistency
+- Mobile weekly results now use a two-row layout for holes, with responsive sizing and color-coded above-par scores
+- Refactored leaderboard and weekly results components for modularity and maintainability
+- Removed unused props and cleaned up codebase after refactor
+- Improved color logic for above-par scores (+1, +2, +3+)

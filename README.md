@@ -36,13 +36,17 @@ npm run dev
 - View overall leaderboard with points from best 11 competitions
 - Filter by player class (Open, Master, etc.)
 - View weekly results with detailed hole-by-hole scores
+- - Mobile cards now display holes in two rows of 9, filling the card width responsively
+- - Above-par scores are color-coded: +1 (light red), +2 (medium red), +3+ (dark red)
 - Select different competition years
 - Responsive design for both desktop and mobile
 
 ## Structure
 
-- `src/components/FetchResults.jsx` - Main component handling data fetching and view switching
+- `src/components/ResultsContainer.jsx` - Main component handling data fetching, year/class/week selection, and view switching
 - `src/components/OverallLeaderboard.jsx` - Handles overall leaderboard display and calculations
+- `src/components/WeeklyResultsMobileCard.jsx` - Mobile-friendly weekly results card with two rows of 9 holes, responsive hole cells, and color-coded scores
+- `src/components/WeeklyResultsTable.jsx` - Desktop weekly results table with color-coded scores
 - Selection between years and player classes handled with buttons
 - Supports both SubCompetitions format (2020-2021, 2023-2025) and TourResults format (2022)
 
