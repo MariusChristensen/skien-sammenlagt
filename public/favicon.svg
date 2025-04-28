@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <g fill="none" stroke="black" stroke-width="2">
+    <!-- Top band -->
+    <rect x="20" y="10" width="24" height="4" fill="black"></rect>
+    <!-- Chains -->
+    <line x1="32" y1="14" x2="32" y2="34"></line>
+    <line x1="26" y1="14" x2="28" y2="34"></line>
+    <line x1="38" y1="14" x2="36" y2="34"></line>
+    <line x1="22" y1="14" x2="26" y2="34"></line>
+    <line x1="42" y1="14" x2="38" y2="34"></line>
+    <!-- Basket -->
+    <ellipse cx="32" cy="36" rx="14" ry="4" fill="black"></ellipse>
+    <!-- Pole -->
+    <line x1="32" y1="36" x2="32" y2="54"></line>
+    <!-- Base -->
+    <line x1="24" y1="54" x2="40" y2="54"></line>
+  </g>
+</svg>
