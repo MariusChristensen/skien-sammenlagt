@@ -47,5 +47,5 @@
   - 2022: "2079115"
   - 2021: "1660549"
   - 2020: "1222406"
-- Maximum counting competitions: 11
+- Maximum counting competitions: 50% of total competitions
 - Display at least 20 weeks for visual consistency

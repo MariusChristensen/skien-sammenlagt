@@ -109,6 +109,7 @@ const OverallLeaderboard = ({
             weeklyPointsInfo: Array(eventCount).fill({
               points: 0,
               counts: false,
+              isCompleted: false,
             }),
             totalPoints: 0,
             // Store raw scores for processing
@@ -139,22 +140,37 @@ const OverallLeaderboard = ({
             score: player.rawScores[eventIndex],
           }));
 
-        // Sort participants by score (lower is better)
-        eventParticipants.sort((a, b) => a.score - b.score);
+        // Only calculate points if there are actual scores (not just registrations)
+        const hasActualScores = eventParticipants.some((p) => p.score > 0);
 
-        // Assign points based on placement
-        eventParticipants.forEach((participant, index) => {
-          const place = index + 1;
-          const points = calculatePoints(place);
+        if (hasActualScores) {
+          // Sort participants by score (lower is better)
+          eventParticipants.sort((a, b) => a.score - b.score);
 
-          if (playerScores[participant.id]) {
-            playerScores[participant.id].weeklyPoints[eventIndex] = points;
-            playerScores[participant.id].weeklyPointsInfo[eventIndex] = {
-              points,
+          // Assign points based on placement
+          eventParticipants.forEach((participant, index) => {
+            const place = index + 1;
+            const points = calculatePoints(place);
+
+            if (playerScores[participant.id]) {
+              playerScores[participant.id].weeklyPoints[eventIndex] = points;
+              playerScores[participant.id].weeklyPointsInfo[eventIndex] = {
+                points,
+                counts: false,
+                isCompleted: true,
+              };
+            }
+          });
+        } else {
+          // Mark this week as not completed for all players
+          Object.values(playerScores).forEach((player) => {
+            player.weeklyPointsInfo[eventIndex] = {
+              points: 0,
               counts: false,
+              isCompleted: false,
             };
-          }
-        });
+          });
+        }
       });
 
       // Clean up the raw scores which we no longer need
@@ -170,38 +186,56 @@ const OverallLeaderboard = ({
       subCompetitions.forEach((competition, weekIndex) => {
         if (!competition.Results) return;
 
-        // Calculate points for each player in this week
-        competition.Results.forEach((player) => {
-          const playerName = player.Name;
-          const playerID = player.UserID;
-          const playerClass = player.ClassName || "Unknown";
-          const points = calculatePoints(player.Place);
+        // Check if this competition has actual scores (not just registrations)
+        const hasActualScores = competition.Results.some(
+          (player) => player.Sum !== undefined && player.Sum > 0
+        );
 
-          // Skip if filtering by class and this player is in a different class
-          if (selectedClass && playerClass !== selectedClass) return;
+        if (hasActualScores) {
+          // Calculate points for each player in this week
+          competition.Results.forEach((player) => {
+            const playerName = player.Name;
+            const playerID = player.UserID;
+            const playerClass = player.ClassName || "Unknown";
+            const points = calculatePoints(player.Place);
 
-          // Initialize player in our tracking object if first encounter
-          if (!playerScores[playerID]) {
-            playerScores[playerID] = {
-              name: playerName,
-              id: playerID,
-              class: playerClass,
-              weeklyPoints: Array(eventCount).fill(0),
-              weeklyPointsInfo: Array(eventCount).fill({
-                points: 0,
-                counts: false,
-              }),
-              totalPoints: 0,
+            // Skip if filtering by class and this player is in a different class
+            if (selectedClass && playerClass !== selectedClass) return;
+
+            // Initialize player in our tracking object if first encounter
+            if (!playerScores[playerID]) {
+              playerScores[playerID] = {
+                name: playerName,
+                id: playerID,
+                class: playerClass,
+                weeklyPoints: Array(eventCount).fill(0),
+                weeklyPointsInfo: Array(eventCount).fill({
+                  points: 0,
+                  counts: false,
+                  isCompleted: false,
+                }),
+                totalPoints: 0,
+              };
+            }
+
+            // Add points for this week
+            playerScores[playerID].weeklyPoints[weekIndex] = points;
+            playerScores[playerID].weeklyPointsInfo[weekIndex] = {
+              points: points,
+              counts: false,
+              isCompleted: true,
             };
-          }
-
-          // Add points for this week
-          playerScores[playerID].weeklyPoints[weekIndex] = points;
-          playerScores[playerID].weeklyPointsInfo[weekIndex] = {
-            points: points,
-            counts: false, // Initially mark as not counting, we'll update this later
-          };
-        });
+          });
+        } else {
+          // Mark this week as not completed for all players
+          Object.values(playerScores).forEach((player) => {
+            player.weeklyPointsInfo[weekIndex] = {
+              points: 0,
+              counts: false,
+              isCompleted: false,
+            };
+          });
+        }
       });
     } else {
       // No data available in a format we understand
@@ -214,12 +248,16 @@ const OverallLeaderboard = ({
     // Update maxCompetitions state
     setMaxCompetitions(Math.max(eventCount, MIN_COMPETITIONS_DISPLAY));
 
-    // Calculate total points using best 50% of competitions for each player
+    // Calculate total points using best 50% of completed competitions for each player
     Object.values(playerScores).forEach((player) => {
       // Create array of point objects with week index and points value
       const pointsWithIndices = player.weeklyPointsInfo
-        .map((info, index) => ({ index, points: info.points }))
-        .filter((item) => item.points > 0); // Only include weeks with points
+        .map((info, index) => ({
+          index,
+          points: info.points,
+          isCompleted: info.isCompleted,
+        }))
+        .filter((item) => item.points > 0 && item.isCompleted); // Only include completed weeks with points
 
       // Sort by points (descending)
       pointsWithIndices.sort((a, b) => b.points - a.points);
@@ -325,7 +363,7 @@ const OverallLeaderboard = ({
                       : ""
                   }`}
                 >
-                  <div className="text-xs text-gray-500">Week {idx + 1}</div>
+                  <div className="text-xs text-gray-500">Uke {idx + 1}</div>
                   <div>{weekInfo.points || "-"}</div>
                 </div>
               );
@@ -336,7 +374,7 @@ const OverallLeaderboard = ({
 
       {players.length === 0 && (
         <div className="py-4 text-center text-gray-500">
-          No results available for {className}.
+          Ingen resultater tilgjengelig for {className}.
         </div>
       )}
     </div>
@@ -348,10 +386,10 @@ const OverallLeaderboard = ({
         <thead className="bg-gray-50 sticky top-0">
           <tr>
             <th className="py-3 px-4 text-center font-semibold text-gray-700 w-16 border-r border-gray-300 sticky left-0 bg-gray-50 z-20">
-              Rank
+              Plass
             </th>
             <th className="py-3 px-4 text-left font-semibold text-gray-700 w-52 border-r border-gray-300 sticky left-16 bg-gray-50 z-20">
-              Player
+              Spiller
             </th>
 
             {Array.from({ length: displayWeekCount }).map((_, index) => (
@@ -366,7 +404,7 @@ const OverallLeaderboard = ({
             ))}
 
             <th className="py-3 px-4 text-center font-semibold text-gray-700 min-w-[100px] bg-gray-100 sticky right-0 z-10 border-l border-gray-300">
-              Total
+              Totalt
             </th>
           </tr>
         </thead>
@@ -430,7 +468,7 @@ const OverallLeaderboard = ({
                 colSpan={displayWeekCount + 3}
                 className="py-4 px-4 text-center text-gray-500"
               >
-                No results available for {className}.
+                Ingen resultater tilgjengelig for {className}.
               </td>
             </tr>
           )}
@@ -441,9 +479,7 @@ const OverallLeaderboard = ({
 
   return (
     <div className="w-full">
-      <h2 className="text-2xl font-semibold mb-4">
-        Overall Leaderboard {selectedYear}
-      </h2>
+      <h2 className="text-2xl font-semibold mb-4">Sammenlagt {selectedYear}</h2>
 
       {/* Show leaderboards for each class */}
       {Object.entries(groupedLeaderboards).map(([className, players]) => (
