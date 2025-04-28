@@ -1,4 +1,4 @@
-import FetchResults from "./components/FetchResults";
+import ResultsContainer from "./components/ResultsContainer";
 
 function App() {
   return (
@@ -19,7 +19,7 @@ function App() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <FetchResults />
+        <ResultsContainer />
       </main>
     </div>
   );
