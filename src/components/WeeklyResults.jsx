@@ -78,7 +78,7 @@ const WeeklyResults = ({
 
     return Object.entries(classResults).map(([className, players]) => (
       <div key={className} className="mb-8">
-        <h3 className="text-xl font-semibold mb-3 bg-gray-200 p-2 rounded">
+        <h3 className="text-xl font-semibold mb-3 bg-[#800000] text-white p-2 rounded">
           {className}
         </h3>
         {isMobileView ? (

@@ -333,7 +333,7 @@ const OverallLeaderboard = ({
       {/* Show leaderboards for each class */}
       {Object.entries(groupedLeaderboards).map(([className, players]) => (
         <div key={className} className="mb-10">
-          <h3 className="text-xl font-semibold mb-3 bg-gray-200 p-2 rounded">
+          <h3 className="text-xl font-semibold mb-3 bg-[#800000] text-white p-2 rounded">
             {className}
           </h3>
           {isMobileView ? (

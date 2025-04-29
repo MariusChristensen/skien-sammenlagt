@@ -14,6 +14,16 @@ const getWeekLabel = (name, idx) => {
   return match ? match[0] : name || `Uke ${idx + 1}`;
 };
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "";
+  const day = d.getDate().toString().padStart(2, "0");
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}.${month}.${year}`;
+};
+
 const WeekDropdown = ({
   weeks,
   selectedWeek,
@@ -29,7 +39,14 @@ const WeekDropdown = ({
     >
       <span>
         {weeks && weeks[selectedWeek]
-          ? getWeekLabel(weeks[selectedWeek].Name, selectedWeek)
+          ? (() => {
+              const label = getWeekLabel(
+                weeks[selectedWeek].Name,
+                selectedWeek
+              );
+              const date = formatDate(weeks[selectedWeek].Date);
+              return label + (date ? ` (${date})` : "");
+            })()
           : `Uke ${selectedWeek + 1}`}
       </span>
       <svg
@@ -50,6 +67,7 @@ const WeekDropdown = ({
       <div className="absolute z-20 mt-2 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-72 overflow-y-auto">
         {weeks.map((sub, idx) => {
           const label = getWeekLabel(sub.Name, idx);
+          const date = formatDate(sub.Date);
           return (
             <button
               key={sub.ID || idx}
@@ -62,6 +80,7 @@ const WeekDropdown = ({
               }`}
             >
               {label}
+              {date ? ` (${date})` : ""}
             </button>
           );
         })}
