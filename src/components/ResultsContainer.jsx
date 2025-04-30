@@ -111,80 +111,82 @@ const ResultsContainer = () => {
     return <p className="text-center py-8 text-red-500">Feil: {error}</p>;
 
   return (
-    <div>
-      {/* Navigation Bar */}
-      <div className="bg-white shadow-md rounded-lg mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4">
-          {/* Year Selection Dropdown */}
-          <YearDropdown
-            years={AVAILABLE_YEARS}
-            selectedYear={selectedYear}
-            onChange={(year) => {
-              setSelectedYear(year);
-              setIsYearDropdownOpen(false);
-            }}
-            isOpen={isYearDropdownOpen}
-            setIsOpen={(open) => {
-              if (open) setIsWeekDropdownOpen(false);
-              setIsYearDropdownOpen(open);
-            }}
-            dropdownRef={yearDropdownRef}
-          />
-
-          {/* View Toggle Buttons */}
-          <ViewToggle activeView={activeView} onChange={setActiveView} />
-        </div>
-
-        {/* Class Selection */}
-        {availableClasses.length > 0 && (
-          <ClassSelector
-            classes={availableClasses}
-            selectedClass={selectedClass}
-            onChange={setSelectedClass}
-          />
-        )}
-      </div>
-
-      {/* Conditional Rendering Based on View */}
-      {activeView === "overall" ? (
-        <OverallLeaderboard
-          results={results}
-          selectedClass={selectedClass}
-          selectedYear={selectedYear}
-        />
-      ) : (
-        <div>
-          {/* Week Selection */}
-          <div className="mb-4 flex justify-center">
-            <WeekDropdown
-              weeks={results?.Competition?.SubCompetitions || []}
-              selectedWeek={selectedWeek}
-              onChange={(idx) => {
-                setSelectedWeek(idx);
-                setIsWeekDropdownOpen(false);
+    <main className="container mx-auto px-4 py-8">
+      <div>
+        {/* Navigation Bar */}
+        <div className="bg-white shadow-md rounded-lg mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4">
+            {/* Year Selection Dropdown */}
+            <YearDropdown
+              years={AVAILABLE_YEARS}
+              selectedYear={selectedYear}
+              onChange={(year) => {
+                setSelectedYear(year);
+                setIsYearDropdownOpen(false);
               }}
-              isOpen={isWeekDropdownOpen}
+              isOpen={isYearDropdownOpen}
               setIsOpen={(open) => {
-                if (open) setIsYearDropdownOpen(false);
-                setIsWeekDropdownOpen(open);
+                if (open) setIsWeekDropdownOpen(false);
+                setIsYearDropdownOpen(open);
               }}
-              dropdownRef={weekDropdownRef}
+              dropdownRef={yearDropdownRef}
             />
+
+            {/* View Toggle Buttons */}
+            <ViewToggle activeView={activeView} onChange={setActiveView} />
           </div>
 
-          {/* Weekly Results */}
-          <h2 className="text-2xl font-semibold mb-4">
-            Uke {selectedWeek + 1}
-          </h2>
-          <WeeklyResults
-            results={results}
-            selectedWeek={selectedWeek}
-            selectedClass={selectedClass}
-            isMobileView={isMobileView}
-          />
+          {/* Class Selection */}
+          {availableClasses.length > 0 && (
+            <ClassSelector
+              classes={availableClasses}
+              selectedClass={selectedClass}
+              onChange={setSelectedClass}
+            />
+          )}
         </div>
-      )}
-    </div>
+
+        {/* Conditional Rendering Based on View */}
+        {activeView === "overall" ? (
+          <OverallLeaderboard
+            results={results}
+            selectedClass={selectedClass}
+            selectedYear={selectedYear}
+          />
+        ) : (
+          <div>
+            {/* Week Selection */}
+            <div className="mb-4 flex justify-center">
+              <WeekDropdown
+                weeks={results?.Competition?.SubCompetitions || []}
+                selectedWeek={selectedWeek}
+                onChange={(idx) => {
+                  setSelectedWeek(idx);
+                  setIsWeekDropdownOpen(false);
+                }}
+                isOpen={isWeekDropdownOpen}
+                setIsOpen={(open) => {
+                  if (open) setIsYearDropdownOpen(false);
+                  setIsWeekDropdownOpen(open);
+                }}
+                dropdownRef={weekDropdownRef}
+              />
+            </div>
+
+            {/* Weekly Results */}
+            <h2 className="text-2xl font-semibold mb-4">
+              Uke {selectedWeek + 1}
+            </h2>
+            <WeeklyResults
+              results={results}
+              selectedWeek={selectedWeek}
+              selectedClass={selectedClass}
+              isMobileView={isMobileView}
+            />
+          </div>
+        )}
+      </div>
+    </main>
   );
 };
 
