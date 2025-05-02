@@ -3,7 +3,7 @@ import YearDropdown from "../components/YearDropdown";
 import WeekDropdown from "../components/WeekDropdown";
 import ViewToggle from "../components/ViewToggle";
 import HoleAveragesTable from "../components/HoleAveragesTable";
-import { COMPETITIONS } from "../components/ResultsContainer";
+import { COMPETITIONS } from "../constants/competitions";
 
 const AVAILABLE_YEARS = Object.keys(COMPETITIONS).sort().reverse();
 
