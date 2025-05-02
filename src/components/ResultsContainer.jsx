@@ -6,18 +6,19 @@ import ClassSelector from "./ClassSelector";
 import ViewToggle from "./ViewToggle";
 import WeeklyResults from "./WeeklyResults";
 
-// Competition IDs for each year
-const COMPETITION_IDS = {
-  2020: "1222406",
-  2021: "1660549",
-  2022: "2079115",
-  2023: "2503707",
-  2024: "2886967",
-  2025: "3268191",
+// Competition IDs and total rounds for each year (set here for each new year)
+const COMPETITIONS = {
+  2020: { id: "1222406", totalRounds: 23 },
+  2021: { id: "1660549", totalRounds: 20 },
+  2022: { id: "2079115", totalRounds: 24 },
+  2023: { id: "2503707", totalRounds: 22 },
+  2024: { id: "2886967", totalRounds: 23 },
+  2025: { id: "3268191", totalRounds: 22 },
+  // Add new years here
 };
 
 // Available years (in reverse chronological order)
-const AVAILABLE_YEARS = Object.keys(COMPETITION_IDS).sort().reverse();
+const AVAILABLE_YEARS = Object.keys(COMPETITIONS).sort().reverse();
 
 const ResultsContainer = () => {
   const [results, setResults] = useState(null);
@@ -34,8 +35,9 @@ const ResultsContainer = () => {
   const yearDropdownRef = useRef(null);
   const weekDropdownRef = useRef(null);
 
-  // Get the competition ID based on selected year
-  const COMPETITION_ID = COMPETITION_IDS[selectedYear];
+  // Get the competition ID and total rounds based on selected year
+  const COMPETITION_ID = COMPETITIONS[selectedYear].id;
+  const TOTAL_ROUNDS = COMPETITIONS[selectedYear].totalRounds;
   const API_URL = `https://discgolfmetrix.com/api.php?content=result&id=${COMPETITION_ID}`;
 
   useEffect(() => {
@@ -85,16 +87,10 @@ const ResultsContainer = () => {
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event) {
-      if (
-        yearDropdownRef.current &&
-        !yearDropdownRef.current.contains(event.target)
-      ) {
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target)) {
         setIsYearDropdownOpen(false);
       }
-      if (
-        weekDropdownRef.current &&
-        !weekDropdownRef.current.contains(event.target)
-      ) {
+      if (weekDropdownRef.current && !weekDropdownRef.current.contains(event.target)) {
         setIsWeekDropdownOpen(false);
       }
     }
@@ -107,8 +103,7 @@ const ResultsContainer = () => {
   }, [isYearDropdownOpen, isWeekDropdownOpen]);
 
   if (loading) return <p className="text-center py-8">Laster resultater...</p>;
-  if (error)
-    return <p className="text-center py-8 text-red-500">Feil: {error}</p>;
+  if (error) return <p className="text-center py-8 text-red-500">Feil: {error}</p>;
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -138,11 +133,7 @@ const ResultsContainer = () => {
 
           {/* Class Selection */}
           {availableClasses.length > 0 && (
-            <ClassSelector
-              classes={availableClasses}
-              selectedClass={selectedClass}
-              onChange={setSelectedClass}
-            />
+            <ClassSelector classes={availableClasses} selectedClass={selectedClass} onChange={setSelectedClass} />
           )}
         </div>
 
@@ -152,6 +143,7 @@ const ResultsContainer = () => {
             results={results}
             selectedClass={selectedClass}
             selectedYear={selectedYear}
+            totalRounds={TOTAL_ROUNDS}
           />
         ) : (
           <div>
@@ -174,9 +166,7 @@ const ResultsContainer = () => {
             </div>
 
             {/* Weekly Results */}
-            <h2 className="text-2xl font-semibold mb-4">
-              Uke {selectedWeek + 1}
-            </h2>
+            <h2 className="text-2xl font-semibold mb-4">Uke {selectedWeek + 1}</h2>
             <WeeklyResults
               results={results}
               selectedWeek={selectedWeek}

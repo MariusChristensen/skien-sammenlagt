@@ -2,11 +2,7 @@ import React, { useEffect, useState } from "react";
 import OverallLeaderboardTable from "./OverallLeaderboardTable";
 import OverallLeaderboardMobileCard from "./OverallLeaderboardMobileCard";
 
-const OverallLeaderboard = ({
-  results,
-  selectedClass = null,
-  selectedYear = "2025",
-}) => {
+const OverallLeaderboard = ({ results, selectedClass = null, selectedYear = "2025", totalRounds }) => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
   const [maxCompetitions, setMaxCompetitions] = useState(20);
@@ -51,13 +47,9 @@ const OverallLeaderboard = ({
     let eventCount = 0;
 
     // Check which data format we have - TourResults or SubCompetitions
-    const hasTourResults =
-      results.Competition.TourResults &&
-      results.Competition.TourResults.length > 0;
+    const hasTourResults = results.Competition.TourResults && results.Competition.TourResults.length > 0;
 
-    const hasSubCompetitions =
-      results.Competition.SubCompetitions &&
-      results.Competition.SubCompetitions.length > 0;
+    const hasSubCompetitions = results.Competition.SubCompetitions && results.Competition.SubCompetitions.length > 0;
 
     // Get number of events from the data
     if (hasTourResults && results.Competition.Events) {
@@ -81,8 +73,7 @@ const OverallLeaderboard = ({
       // Choose the longest name for each player (usually the most complete name)
       Object.keys(mergedPlayerNames).forEach((userId) => {
         mergedPlayerNames[userId] = mergedPlayerNames[userId].reduce(
-          (longest, current) =>
-            current.length > longest.length ? current : longest,
+          (longest, current) => (current.length > longest.length ? current : longest),
           ""
         );
       });
@@ -133,10 +124,7 @@ const OverallLeaderboard = ({
       events.forEach((event, eventIndex) => {
         // Get all players who participated in this event
         const eventParticipants = Object.values(playerScores)
-          .filter(
-            (player) =>
-              player.rawScores && player.rawScores[eventIndex] !== null
-          )
+          .filter((player) => player.rawScores && player.rawScores[eventIndex] !== null)
           .map((player) => ({
             id: player.id,
             score: player.rawScores[eventIndex],
@@ -189,9 +177,7 @@ const OverallLeaderboard = ({
         if (!competition.Results) return;
 
         // Check if this competition has actual scores (not just registrations)
-        const hasActualScores = competition.Results.some(
-          (player) => player.Sum !== undefined && player.Sum > 0
-        );
+        const hasActualScores = competition.Results.some((player) => player.Sum !== undefined && player.Sum > 0);
 
         if (hasActualScores) {
           // Calculate points for each player in this week
@@ -252,68 +238,60 @@ const OverallLeaderboard = ({
 
     // Calculate total points using best 50% of completed competitions for each player
     Object.values(playerScores).forEach((player) => {
-      // Create array of point objects with week index and points value
       const pointsWithIndices = player.weeklyPointsInfo
         .map((info, index) => ({
           index,
           points: info.points,
           isCompleted: info.isCompleted,
         }))
-        .filter((item) => item.points > 0 && item.isCompleted); // Only include completed weeks with points
+        .filter((item) => item.points > 0 && item.isCompleted);
 
-      // Sort by points (descending)
-      pointsWithIndices.sort((a, b) => b.points - a.points);
+      // Calculate max counted rounds based on totalRounds from config (50% rounded up)
+      const targetCountingCompetitions = Math.ceil(totalRounds * 0.5);
 
-      // Calculate number of counting competitions (50% of total competitions)
-      const countingCompetitions = Math.floor(eventCount * 0.5);
-
-      // Determine which results count (50% or all if fewer than 50%)
-      const countingResults = Math.min(
-        countingCompetitions,
-        pointsWithIndices.length
-      );
       let total = 0;
-
-      // Mark all as not counting initially
       player.weeklyPointsInfo.forEach((info, index) => {
         player.weeklyPointsInfo[index] = { ...info, counts: false };
       });
 
-      // Mark the top counting results and sum them
-      for (let i = 0; i < countingResults; i++) {
-        const { index, points } = pointsWithIndices[i];
-        player.weeklyPointsInfo[index] = {
-          ...player.weeklyPointsInfo[index],
-          counts: true,
-        };
-        total += points;
+      // If played rounds < max counted, count all played rounds (no sorting)
+      if (pointsWithIndices.length < targetCountingCompetitions) {
+        pointsWithIndices.forEach(({ index, points }) => {
+          player.weeklyPointsInfo[index] = {
+            ...player.weeklyPointsInfo[index],
+            counts: true,
+          };
+          total += points;
+        });
+      } else {
+        // Sort by points (descending) and count only the best max counted
+        pointsWithIndices.sort((a, b) => b.points - a.points);
+        for (let i = 0; i < targetCountingCompetitions; i++) {
+          const { index, points } = pointsWithIndices[i];
+          player.weeklyPointsInfo[index] = {
+            ...player.weeklyPointsInfo[index],
+            counts: true,
+          };
+          total += points;
+        }
       }
 
       player.totalPoints = total;
     });
 
     // Convert to array and sort by total points (descending)
-    const leaderboardArray = Object.values(playerScores).sort(
-      (a, b) => b.totalPoints - a.totalPoints
-    );
+    const leaderboardArray = Object.values(playerScores).sort((a, b) => b.totalPoints - a.totalPoints);
 
     setLeaderboard(leaderboardArray);
-  }, [results, selectedClass]);
+  }, [results, selectedClass, totalRounds]);
 
   if (!results) return null;
 
   // Get the actual week count from data
-  const actualWeekCount =
-    results?.Competition?.SubCompetitions?.length ||
-    results?.Competition?.Events?.length ||
-    0;
+  const actualWeekCount = results?.Competition?.SubCompetitions?.length || results?.Competition?.Events?.length || 0;
 
   // Use the larger of actual week count or minimum display count or maxCompetitions
-  const displayWeekCount = Math.max(
-    actualWeekCount,
-    MIN_COMPETITIONS_DISPLAY,
-    maxCompetitions
-  );
+  const displayWeekCount = Math.max(actualWeekCount, MIN_COMPETITIONS_DISPLAY, maxCompetitions);
 
   // Group players by class if no specific class is selected
   const groupedLeaderboards = !selectedClass
@@ -333,14 +311,9 @@ const OverallLeaderboard = ({
       {/* Show leaderboards for each class */}
       {Object.entries(groupedLeaderboards).map(([className, players]) => (
         <div key={className} className="mb-10">
-          <h3 className="text-xl font-semibold mb-3 bg-[#800000] text-white p-2 rounded">
-            {className}
-          </h3>
+          <h3 className="text-xl font-semibold mb-3 bg-[#800000] text-white p-2 rounded">{className}</h3>
           {isMobileView ? (
-            <OverallLeaderboardMobileCard
-              players={players}
-              displayWeekCount={displayWeekCount}
-            />
+            <OverallLeaderboardMobileCard players={players} displayWeekCount={displayWeekCount} />
           ) : (
             <OverallLeaderboardTable
               players={players}
