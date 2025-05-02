@@ -1,32 +1,24 @@
 import React from "react";
 
 const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
-  <div className="space-y-4 max-w-xl mx-auto">
+  <div className="space-y-4 max-w-xl mx-auto px-2">
     {players.length > 0 ? (
       players.map((player, idx) => {
-        const holeResults = player.PlayerResults
-          ? [...player.PlayerResults]
-          : [];
+        const holeResults = player.PlayerResults ? [...player.PlayerResults] : [];
         return (
           <div
             key={player.UserID}
-            className={`border rounded-lg p-3 shadow-sm ${
-              idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-            }`}
+            className={`border rounded-lg p-2 shadow-sm ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
           >
             <div className="flex justify-between items-center mb-2">
-              <div className="flex items-center">
-                <span className="font-bold text-lg mr-2">{player.Place}</span>
-                <span className="font-medium flex-1 truncate">
-                  {player.Name}
-                </span>
+              <div className="flex items-center min-w-0">
+                <span className="font-bold text-base mr-1">{player.Place}</span>
+                <span className="font-medium truncate text-sm">{player.Name}</span>
               </div>
-              <div className="flex flex-col items-center">
-                <span className="bg-gray-100 font-bold text-lg px-3 py-1 rounded mb-1">
-                  {player.Sum}
-                </span>
+              <div className="flex flex-col items-center shrink-0 ml-2">
+                <span className="bg-gray-100 font-bold text-base px-2 py-0.5 rounded mb-0.5">{player.Sum}</span>
                 <span
-                  className={`relative-score-pill text-xs font-bold px-3 py-1 rounded
+                  className={`relative-score-pill text-xs font-bold px-2 py-0.5 rounded
                     ${
                       player.Diff > 0
                         ? "bg-red-500 text-white"
@@ -43,7 +35,7 @@ const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
             <div className="overflow-x-auto">
               <div className="flex flex-col gap-1">
                 {/* First row: holes 1-9 */}
-                <div className="flex space-x-1 min-w-0">
+                <div className="flex gap-0.5 min-w-0">
                   {Array.from({ length: 9 }).map((_, hIdx) => {
                     const holeData = holeResults[hIdx];
                     const score = holeData?.Result;
@@ -59,20 +51,16 @@ const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
                     return (
                       <div
                         key={hIdx}
-                        className={`flex-1 aspect-square flex flex-col items-center justify-center border rounded min-w-0 ${bgColor}`}
+                        className={`w-[10%] min-w-[24px] aspect-square flex flex-col items-center justify-center border rounded ${bgColor}`}
                       >
-                        <span className="text-xs text-gray-500">
-                          {hIdx + 1}
-                        </span>
-                        <span className="font-semibold">
-                          {score !== undefined ? score : "-"}
-                        </span>
+                        <span className="text-[10px] text-gray-500">{hIdx + 1}</span>
+                        <span className="text-xs font-semibold">{score !== undefined ? score : "-"}</span>
                       </div>
                     );
                   })}
                 </div>
                 {/* Second row: holes 10-18 */}
-                <div className="flex space-x-1 min-w-0">
+                <div className="flex gap-0.5 min-w-0">
                   {Array.from({ length: 9 }).map((_, hIdx) => {
                     const holeIndex = hIdx + 9;
                     const holeData = holeResults[holeIndex];
@@ -89,14 +77,10 @@ const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
                     return (
                       <div
                         key={holeIndex}
-                        className={`flex-1 aspect-square flex flex-col items-center justify-center border rounded min-w-0 ${bgColor}`}
+                        className={`w-[10%] min-w-[24px] aspect-square flex flex-col items-center justify-center border rounded ${bgColor}`}
                       >
-                        <span className="text-xs text-gray-500">
-                          {holeIndex + 1}
-                        </span>
-                        <span className="font-semibold">
-                          {score !== undefined ? score : "-"}
-                        </span>
+                        <span className="text-[10px] text-gray-500">{holeIndex + 1}</span>
+                        <span className="text-xs font-semibold">{score !== undefined ? score : "-"}</span>
                       </div>
                     );
                   })}

@@ -7,7 +7,7 @@ import ViewToggle from "./ViewToggle";
 import WeeklyResults from "./WeeklyResults";
 
 // Competition IDs and total rounds for each year (set here for each new year)
-const COMPETITIONS = {
+export const COMPETITIONS = {
   2020: { id: "1222406", totalRounds: 23 },
   2021: { id: "1660549", totalRounds: 20 },
   2022: { id: "2079115", totalRounds: 24 },

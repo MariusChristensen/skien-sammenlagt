@@ -1,26 +1,29 @@
 import React from "react";
 
-const ViewToggle = ({ activeView, onChange }) => (
+const ViewToggle = ({
+  activeView,
+  onChange,
+  leftValue = "overall",
+  rightValue = "weekly",
+  leftLabel = "Sammenlagt",
+  rightLabel = "Ukentlig",
+}) => (
   <div className="flex space-x-2 w-full sm:w-auto justify-center sm:justify-start">
     <button
       className={`px-4 py-2 rounded-md transition-colors ${
-        activeView === "overall"
-          ? "bg-[#800000] text-white"
-          : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+        activeView === leftValue ? "bg-[#800000] text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300"
       }`}
-      onClick={() => onChange("overall")}
+      onClick={() => onChange(leftValue)}
     >
-      Sammenlagt
+      {leftLabel}
     </button>
     <button
       className={`px-4 py-2 rounded-md transition-colors ${
-        activeView === "weekly"
-          ? "bg-[#800000] text-white"
-          : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+        activeView === rightValue ? "bg-[#800000] text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300"
       }`}
-      onClick={() => onChange("weekly")}
+      onClick={() => onChange(rightValue)}
     >
-      Ukentlig
+      {rightLabel}
     </button>
   </div>
 );
