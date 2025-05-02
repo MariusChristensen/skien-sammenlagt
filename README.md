@@ -1,18 +1,20 @@
 # Skien Frisbeeklubb - Ukegolf Sammenlagt
 
-A leaderboard application that displays disc golf weekly competition results and overall standings for Skien Frisbeeklubb.
+A modern leaderboard and statistics web app for Skien Frisbeeklubb's weekly disc golf competitions.
 
 ## About
 
-This application fetches data from Disc Golf Metrix API and displays:
+This application fetches data from the Disc Golf Metrix API and displays:
 
-- Overall leaderboard with points calculated from weekly competitions
+- Overall leaderboard with dynamic points calculation from weekly competitions
 - Weekly competition results with detailed scores
+- Statistics and hole averages for each year and week
+- Ace Hall of Fame (hole-in-ones) for each year
 - Proper display of scores across different years (2020-2025)
 
 ## Technologies
 
-- React
+- React (with react-router-dom for routing)
 - Tailwind CSS
 - Disc Golf Metrix API
 
@@ -21,40 +23,49 @@ This application fetches data from Disc Golf Metrix API and displays:
 1. Clone the repository
 2. Install dependencies:
 
-```
+```sh
 npm install
 ```
 
 3. Run the development server:
 
-```
+```sh
 npm run dev
 ```
 
 ## Features
 
-- View overall leaderboard with points from best 11 competitions
-- Filter by player class (Open, Master, etc.)
-- View weekly results with detailed hole-by-hole scores
-- - Mobile cards now display holes in two rows of 9, filling the card width responsively
-- - Above-par scores are color-coded: +1 (light red), +2 (medium red), +3+ (dark red)
-- Select different competition years
-- Responsive design for both desktop and mobile
+- Multi-page app with Results and Statistics views
+- Year, week, and class selection with dynamic dropdowns
+- Responsive design for both desktop and mobile (optimized down to 320px)
+- Mobile cards display holes in a modern, readable grid
+- Color-coded scores: +1 (light red), +2 (medium red), +3+ (dark red)
+- Ace Hall of Fame: lists all hole-in-ones for each year
+- Fallback messages and Metrix links for 2022 weekly and sammenlagt stats (due to API limitations)
+- Easily add new years/competitions via `src/constants/competitions.js`
 
 ## Structure
 
-- `src/components/ResultsContainer.jsx` - Main component handling data fetching, year/class/week selection, and view switching
+- `src/pages/Results.jsx` - Results page (overall leaderboard, weekly results)
+- `src/pages/Statistics.jsx` - Statistics page (hole averages, Ace Hall of Fame)
+- `src/components/ResultsContainer.jsx` - Main logic for results fetching and view switching
+- `src/components/HoleAveragesTable.jsx` - Responsive, color-coded hole averages table
 - `src/components/OverallLeaderboard.jsx` - Handles overall leaderboard display and calculations
-- `src/components/WeeklyResultsMobileCard.jsx` - Mobile-friendly weekly results card with two rows of 9 holes, responsive hole cells, and color-coded scores
-- `src/components/WeeklyResultsTable.jsx` - Desktop weekly results table with color-coded scores
-- Selection between years and player classes handled with buttons
-- Supports both SubCompetitions format (2020-2021, 2023-2025) and TourResults format (2022)
+- `src/components/WeeklyResultsMobileCard.jsx` - Mobile-friendly weekly results card
+- `src/components/WeeklyResultsTable.jsx` - Desktop weekly results table
+- `src/constants/competitions.js` - Competition IDs and round counts for each year (edit here to add new years)
 
-## API Notes
+## API Notes & 2022 Limitation
 
-The application connects to the Disc Golf Metrix API using competition IDs for each year:
+- The app connects to the Disc Golf Metrix API using competition IDs for each year (see `src/constants/competitions.js`).
+- 2020-2021, 2023+ use SubCompetitions format (full hole-by-hole data).
+- 2022 uses TourResults/Events format (only total scores per round in main endpoint). Hole-by-hole stats and aces for 2022 require per-event API calls and are currently shown as fallback links.
+- Points system: 1st place = 50 points, 2nd = 45, 3rd = 40, etc. Overall standings are calculated from the best 50% of rounds (rounded up).
 
-- 2020-2025 competition data is fetched from their respective endpoints
-- Each year may have 20+ weeks of competition
-- Points system: 1st place = 50 points, 2nd = 45, 3rd = 40, etc.
-- Overall standings are calculated from the 11 best results
+## Adding a New Year
+
+- Add a new entry to `src/constants/competitions.js` with the year, competition ID, and total planned rounds. The app will update automatically.
+
+---
+
+For questions or contributions, open an issue or PR!
