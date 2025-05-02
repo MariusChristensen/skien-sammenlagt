@@ -2,7 +2,9 @@
 
 ## 🥇 Top Priority
 
+- Make sure hole averages are actually correct (match Disc Golf Metrix logic, handle DNF/incomplete rounds, etc.)
 - Fix API calls to get 2022 hole-by-hole information for weekly and sammenlagt stats/aces
+- Implement score distribution matrix (like Metrix) for each hole on the stats page.
 
 ## UI & Feature Improvements
 
