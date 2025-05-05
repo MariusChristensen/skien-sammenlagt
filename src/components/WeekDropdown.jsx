@@ -38,16 +38,16 @@ const WeekDropdown = ({
       className="flex items-center justify-between w-full px-4 py-2 bg-[#800000] text-white rounded-md hover:bg-[#600000] transition-colors"
     >
       <span>
-        {weeks && weeks[selectedWeek]
+        {weeks && weeks[selectedWeek - 1]
           ? (() => {
               const label = getWeekLabel(
-                weeks[selectedWeek].Name,
-                selectedWeek
+                weeks[selectedWeek - 1].Name,
+                selectedWeek - 1
               );
-              const date = formatDate(weeks[selectedWeek].Date);
+              const date = formatDate(weeks[selectedWeek - 1].Date);
               return label + (date ? ` (${date})` : "");
             })()
-          : `Uke ${selectedWeek + 1}`}
+          : `Uke ${selectedWeek}`}
       </span>
       <svg
         className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -72,11 +72,11 @@ const WeekDropdown = ({
             <button
               key={sub.ID || idx}
               onClick={() => {
-                onChange(idx);
+                onChange(idx + 1);
                 setIsOpen(false);
               }}
               className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${
-                selectedWeek === idx ? "bg-gray-100 font-medium" : ""
+                selectedWeek === idx + 1 ? "bg-gray-100 font-medium" : ""
               }`}
             >
               {label}

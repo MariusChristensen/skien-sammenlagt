@@ -2,9 +2,7 @@
 
 ## 🥇 Top Priority
 
-- Make sure hole averages are actually correct (match Disc Golf Metrix logic, handle DNF/incomplete rounds, etc.)
 - Fix API calls to get 2022 hole-by-hole information for weekly and sammenlagt stats/aces
-- Implement score distribution matrix (like Metrix) for each hole on the stats page.
 
 ## UI & Feature Improvements
 
@@ -17,6 +15,7 @@
 - Implement player search functionality
 - Add proper error boundaries and fallbacks
 - Implement caching for API data
+- Consider improving Score Distribution to show per-hole data in addition to overall distribution
 
 ## 📝 Project Notes
 
@@ -39,3 +38,5 @@
 - Refactored leaderboard and weekly results components for modularity and maintainability
 - Removed unused props and cleaned up codebase after refactor
 - Improved color logic for above-par scores (+1, +2, +3+)
+- Score Distribution component added to show breakdown of eagles, birdies, pars, etc.
+- Fixed par value calculation by deriving from Result and Diff data

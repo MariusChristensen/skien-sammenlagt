@@ -40,6 +40,7 @@ npm run dev
 - Responsive design for both desktop and mobile (optimized down to 320px)
 - Mobile cards display holes in a modern, readable grid
 - Color-coded scores: +1 (light red), +2 (medium red), +3+ (dark red)
+- Score distribution statistics showing breakdown of eagles, birdies, pars, bogeys, etc.
 - Ace Hall of Fame: lists all hole-in-ones for each year
 - Fallback messages and Metrix links for 2022 weekly and sammenlagt stats (due to API limitations)
 - Easily add new years/competitions via `src/constants/competitions.js`
@@ -50,6 +51,7 @@ npm run dev
 - `src/pages/Statistics.jsx` - Statistics page (hole averages, Ace Hall of Fame)
 - `src/components/ResultsContainer.jsx` - Main logic for results fetching and view switching
 - `src/components/HoleAveragesTable.jsx` - Responsive, color-coded hole averages table
+- `src/components/ScoreDistribution.jsx` - Component showing the distribution of scores relative to par
 - `src/components/OverallLeaderboard.jsx` - Handles overall leaderboard display and calculations
 - `src/components/WeeklyResultsMobileCard.jsx` - Mobile-friendly weekly results card
 - `src/components/WeeklyResultsTable.jsx` - Desktop weekly results table

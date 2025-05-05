@@ -3,6 +3,7 @@ import YearDropdown from "../components/YearDropdown";
 import WeekDropdown from "../components/WeekDropdown";
 import ViewToggle from "../components/ViewToggle";
 import HoleAveragesTable from "../components/HoleAveragesTable";
+import ScoreDistribution from "../components/ScoreDistribution";
 import { COMPETITIONS } from "../constants/competitions";
 
 const AVAILABLE_YEARS = Object.keys(COMPETITIONS).sort().reverse();
@@ -44,7 +45,9 @@ function AceHallOfFame({ results }) {
   }
   return (
     <div className="mb-6 bg-white rounded-lg shadow p-4">
-      <h3 className="text-lg font-bold mb-4 text-[#800000]">Ace Hall of Fame</h3>
+      <h3 className="text-lg font-bold mb-4 text-[#800000]">
+        Ace Hall of Fame
+      </h3>
       <div className="hidden sm:grid grid-cols-4 gap-4 px-2 pb-2 text-xs font-semibold text-gray-500 border-b border-gray-200">
         <div>Navn</div>
         <div>Hull</div>
@@ -53,11 +56,18 @@ function AceHallOfFame({ results }) {
       </div>
       <ul className="divide-y divide-gray-200">
         {aces.map((ace, idx) => (
-          <li key={idx} className="py-2 flex flex-col sm:grid sm:grid-cols-4 sm:gap-4 items-start sm:items-center px-2">
+          <li
+            key={idx}
+            className="py-2 flex flex-col sm:grid sm:grid-cols-4 sm:gap-4 items-start sm:items-center px-2"
+          >
             <span className="font-semibold text-gray-800">{ace.name}</span>
             <span className="text-sm text-gray-600">Hull {ace.hole}</span>
-            <span className="text-xs text-gray-500">{ace.date || `Uke ${ace.week}`}</span>
-            <span className="text-xs text-gray-400">{ace.className && `(${ace.className})`}</span>
+            <span className="text-xs text-gray-500">
+              {ace.date || `Uke ${ace.week}`}
+            </span>
+            <span className="text-xs text-gray-400">
+              {ace.className && `(${ace.className})`}
+            </span>
           </li>
         ))}
       </ul>
@@ -70,11 +80,17 @@ function Statistics() {
   const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
   const yearDropdownRef = useRef(null);
 
+  const [activeView, setActiveView] = useState("sammenlagt"); // 'sammenlagt' or 'ukentlig'
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [isWeekDropdownOpen, setIsWeekDropdownOpen] = useState(false);
   const weekDropdownRef = useRef(null);
 
-  const [activeView, setActiveView] = useState("sammenlagt"); // 'sammenlagt' or 'ukentlig'
+  // Initialize selectedWeek based on view
+  useEffect(() => {
+    if (activeView === "ukentlig" && selectedWeek === 0) {
+      setSelectedWeek(1);
+    }
+  }, [activeView, selectedWeek]);
 
   // Data fetching state
   const [results, setResults] = useState(null);
@@ -86,7 +102,14 @@ function Statistics() {
     setResults(null);
     setLoading(true);
     setError(null);
-    setSelectedWeek(0);
+
+    // When changing years, reset week selection based on the active view
+    if (activeView === "ukentlig") {
+      setSelectedWeek(1); // Set to first week for weekly view
+    } else {
+      setSelectedWeek(0); // Reset to all weeks for sammenlagt view
+    }
+
     const COMPETITION_ID = COMPETITIONS[selectedYear].id;
     const API_URL = `https://discgolfmetrix.com/api.php?content=result&id=${COMPETITION_ID}`;
     const fetchData = async () => {
@@ -102,7 +125,7 @@ function Statistics() {
       }
     };
     fetchData();
-  }, [selectedYear]);
+  }, [selectedYear, activeView]);
 
   // Extract weeks from results
   let weeks = [];
@@ -121,7 +144,9 @@ function Statistics() {
     if (results.Competition.SubCompetitions) {
       if (selectedWeek === 0) {
         // All weeks
-        rounds = results.Competition.SubCompetitions.flatMap((week) => (week.Results ? week.Results : []));
+        rounds = results.Competition.SubCompetitions.flatMap((week) =>
+          week.Results ? week.Results : []
+        );
       } else if (selectedWeek > 0) {
         // Specific week
         const week = results.Competition.SubCompetitions[selectedWeek - 1];
@@ -151,7 +176,9 @@ function Statistics() {
     }
 
     // Find max number of holes
-    const maxHoles = Math.max(...rounds.map((player) => player.PlayerResults?.length || 0));
+    const maxHoles = Math.max(
+      ...rounds.map((player) => player.PlayerResults?.length || 0)
+    );
     if (!rounds.length || !isFinite(maxHoles) || maxHoles <= 0) return [];
 
     // Calculate averages
@@ -171,7 +198,9 @@ function Statistics() {
   }
 
   const averages =
-    activeView === "sammenlagt" ? calculateHoleAverages(results, 0) : calculateHoleAverages(results, selectedWeek);
+    activeView === "sammenlagt"
+      ? calculateHoleAverages(results, 0)
+      : calculateHoleAverages(results, selectedWeek);
 
   // Fallback for 2022 weekly stats
   const is2022 = selectedYear === "2022";
@@ -199,7 +228,13 @@ function Statistics() {
           />
           <ViewToggle
             activeView={activeView}
-            onChange={setActiveView}
+            onChange={(view) => {
+              // When switching to weekly view, set selectedWeek to 1 (first week)
+              if (view === "ukentlig" && activeView !== "ukentlig") {
+                setSelectedWeek(1);
+              }
+              setActiveView(view);
+            }}
             leftLabel="Sammenlagt"
             rightLabel="Ukentlig"
             leftValue="sammenlagt"
@@ -242,7 +277,8 @@ function Statistics() {
       {is2022 && isUkentlig && !loading && !error && metrixEventId && (
         <div className="mb-8 bg-white rounded-lg shadow p-4 text-center">
           <p className="text-amber-600 font-semibold mb-2">
-            Ukentlig statistikk for 2022 kan ikke vises i detalj her pga. endringer i API-strukturen.
+            Ukentlig statistikk for 2022 kan ikke vises i detalj her pga.
+            endringer i API-strukturen.
           </p>
           <a
             href={`https://discgolfmetrix.com/${metrixEventId}`}
@@ -255,9 +291,23 @@ function Statistics() {
         </div>
       )}
       {/* Ace Hall of Fame just above stats table, only in sammenlagt view for non-2022 years */}
-      {activeView === "sammenlagt" && !loading && !error && !is2022 && <AceHallOfFame results={results} />}
+      {activeView === "sammenlagt" && !loading && !error && !is2022 && (
+        <AceHallOfFame results={results} />
+      )}
+
+      {/* Score Distribution Component */}
+      {!(is2022 && (isUkentlig || isSammenlagt)) && !loading && !error && (
+        <ScoreDistribution
+          results={results}
+          selectedWeek={selectedWeek}
+          activeView={activeView}
+        />
+      )}
+
       {/* Only show stats table if not 2022 weekly or sammenlagt fallback */}
-      {!(is2022 && (isUkentlig || isSammenlagt)) && !loading && !error && <HoleAveragesTable averages={averages} />}
+      {!(is2022 && (isUkentlig || isSammenlagt)) && !loading && !error && (
+        <HoleAveragesTable averages={averages} />
+      )}
       {loading && <p className="text-center py-8">Laster statistikk...</p>}
       {error && <p className="text-center py-8 text-red-500">Feil: {error}</p>}
     </div>
