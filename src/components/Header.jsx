@@ -26,6 +26,9 @@ function Header() {
           <Link to="/statistics" className={linkClass("/statistics")}>
             Statistikk
           </Link>
+          <Link to="/player-search" className={linkClass("/player-search")}>
+            Spillersøk
+          </Link>
         </nav>
       </div>
     </header>
