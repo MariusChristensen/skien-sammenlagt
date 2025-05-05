@@ -11,7 +11,7 @@ const getWeekLabel = (name, idx) => {
     return afterArrow.trim();
   }
   const match = name.match(/Runde \d+/);
-  return match ? match[0] : name || `Uke ${idx + 1}`;
+  return match ? match[0] : name || `Runde ${idx + 1}`;
 };
 
 const formatDate = (dateStr) => {
@@ -31,6 +31,7 @@ const WeekDropdown = ({
   isOpen,
   setIsOpen,
   dropdownRef,
+  indexOffset = 0, // 0 for results page (0-indexed), 1 for stats page (1-indexed)
 }) => (
   <div className="relative w-full max-w-xs" ref={dropdownRef}>
     <button
@@ -38,16 +39,12 @@ const WeekDropdown = ({
       className="flex items-center justify-between w-full px-4 py-2 bg-[#800000] text-white rounded-md hover:bg-[#600000] transition-colors"
     >
       <span>
-        {weeks && weeks[selectedWeek - 1]
-          ? (() => {
-              const label = getWeekLabel(
-                weeks[selectedWeek - 1].Name,
-                selectedWeek - 1
-              );
-              const date = formatDate(weeks[selectedWeek - 1].Date);
-              return label + (date ? ` (${date})` : "");
-            })()
-          : `Uke ${selectedWeek}`}
+        {weeks && weeks[selectedWeek - indexOffset]
+          ? getWeekLabel(
+              weeks[selectedWeek - indexOffset].Name,
+              selectedWeek - indexOffset
+            )
+          : `Runde ${selectedWeek - indexOffset + 1}`}
       </span>
       <svg
         className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -72,11 +69,13 @@ const WeekDropdown = ({
             <button
               key={sub.ID || idx}
               onClick={() => {
-                onChange(idx + 1);
+                onChange(idx + indexOffset);
                 setIsOpen(false);
               }}
               className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${
-                selectedWeek === idx + 1 ? "bg-gray-100 font-medium" : ""
+                selectedWeek === idx + indexOffset
+                  ? "bg-gray-100 font-medium"
+                  : ""
               }`}
             >
               {label}

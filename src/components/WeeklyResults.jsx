@@ -51,7 +51,7 @@ const WeeklyResults = ({
             rel="noopener noreferrer"
             className="text-blue-500 hover:underline"
           >
-            Uke {selectedWeek + 1} på Disc Golf Metrix
+            Runde {selectedWeek + 1} på Disc Golf Metrix
           </a>
         </p>
       </div>

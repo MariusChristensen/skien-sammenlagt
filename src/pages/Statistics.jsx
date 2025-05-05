@@ -253,6 +253,7 @@ function Statistics() {
               isOpen={isWeekDropdownOpen}
               setIsOpen={setIsWeekDropdownOpen}
               dropdownRef={weekDropdownRef}
+              indexOffset={1}
             />
           </div>
         )}

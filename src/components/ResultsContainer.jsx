@@ -77,10 +77,16 @@ const ResultsContainer = () => {
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event) {
-      if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target)) {
+      if (
+        yearDropdownRef.current &&
+        !yearDropdownRef.current.contains(event.target)
+      ) {
         setIsYearDropdownOpen(false);
       }
-      if (weekDropdownRef.current && !weekDropdownRef.current.contains(event.target)) {
+      if (
+        weekDropdownRef.current &&
+        !weekDropdownRef.current.contains(event.target)
+      ) {
         setIsWeekDropdownOpen(false);
       }
     }
@@ -92,8 +98,30 @@ const ResultsContainer = () => {
     };
   }, [isYearDropdownOpen, isWeekDropdownOpen]);
 
+  // Function to get the appropriate round name
+  const getRoundName = () => {
+    if (
+      !results?.Competition?.SubCompetitions ||
+      !results.Competition.SubCompetitions[selectedWeek]
+    ) {
+      return `Runde ${selectedWeek + 1}`;
+    }
+
+    const weekName = results.Competition.SubCompetitions[selectedWeek].Name;
+    // Extract just the round name without date
+    if (weekName.includes("Runde")) {
+      // If it contains "Runde", extract just that part
+      const match = weekName.match(/Runde \d+/);
+      return match ? match[0] : `Runde ${selectedWeek + 1}`;
+    }
+
+    // Default fallback
+    return `Runde ${selectedWeek + 1}`;
+  };
+
   if (loading) return <p className="text-center py-8">Laster resultater...</p>;
-  if (error) return <p className="text-center py-8 text-red-500">Feil: {error}</p>;
+  if (error)
+    return <p className="text-center py-8 text-red-500">Feil: {error}</p>;
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -123,7 +151,11 @@ const ResultsContainer = () => {
 
           {/* Class Selection */}
           {availableClasses.length > 0 && (
-            <ClassSelector classes={availableClasses} selectedClass={selectedClass} onChange={setSelectedClass} />
+            <ClassSelector
+              classes={availableClasses}
+              selectedClass={selectedClass}
+              onChange={setSelectedClass}
+            />
           )}
         </div>
 
@@ -142,21 +174,19 @@ const ResultsContainer = () => {
               <WeekDropdown
                 weeks={results?.Competition?.SubCompetitions || []}
                 selectedWeek={selectedWeek}
-                onChange={(idx) => {
-                  setSelectedWeek(idx);
-                  setIsWeekDropdownOpen(false);
-                }}
+                onChange={setSelectedWeek}
                 isOpen={isWeekDropdownOpen}
                 setIsOpen={(open) => {
                   if (open) setIsYearDropdownOpen(false);
                   setIsWeekDropdownOpen(open);
                 }}
                 dropdownRef={weekDropdownRef}
+                indexOffset={0}
               />
             </div>
 
             {/* Weekly Results */}
-            <h2 className="text-2xl font-semibold mb-4">Uke {selectedWeek + 1}</h2>
+            <h2 className="text-2xl font-semibold mb-4">{getRoundName()}</h2>
             <WeeklyResults
               results={results}
               selectedWeek={selectedWeek}
