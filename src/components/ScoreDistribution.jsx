@@ -122,74 +122,23 @@ function getPlayerRounds(results, selectedWeek, activeView) {
   return rounds;
 }
 
-// Helper function to extract par values from various locations in the API response
-function extractParValues(results, selectedWeek, activeView) {
-  let parValues = [];
-  let rounds = getPlayerRounds(results, selectedWeek, activeView);
-
-  // Find a player with complete score data
-  const playersWithCompleteData = rounds.filter(
-    (player) =>
-      player.PlayerResults &&
-      player.PlayerResults.length > 0 &&
-      player.PlayerResults.every(
-        (hole) => hole.Result && hole.Diff !== undefined
-      )
-  );
-
-  if (playersWithCompleteData.length > 0) {
-    // Use the first player with complete data
-    const player = playersWithCompleteData[0];
-
-    // Calculate par as Result - Diff for each hole
-    parValues = player.PlayerResults.map((hole) => {
-      const result = parseInt(hole.Result, 10);
-      const diff = parseInt(hole.Diff, 10);
-      if (!isNaN(result) && !isNaN(diff)) {
-        const calculatedPar = result - diff;
-        return calculatedPar;
-      }
-      return 3; // Default if calculation fails
+// Helper function to extract par values from Tracks data
+function extractParValues(results) {
+  // Extract par values directly from Tracks data
+  if (
+    results.Competition &&
+    results.Competition.Tracks &&
+    results.Competition.Tracks.length > 0
+  ) {
+    return results.Competition.Tracks.map((track) => {
+      // Parse par value, default to 3 if not available or not a number
+      const par = parseInt(track.Par, 10);
+      return isNaN(par) ? 3 : par;
     });
-  } else {
-    // Fallback: Try to find any player with some Result/Diff data
-    for (const player of rounds) {
-      if (player.PlayerResults && player.PlayerResults.length > 0) {
-        const parsFromPlayer = [];
-        let validHoleCount = 0;
-
-        player.PlayerResults.forEach((hole, idx) => {
-          if (hole.Result && hole.Diff !== undefined) {
-            const result = parseInt(hole.Result, 10);
-            const diff = parseInt(hole.Diff, 10);
-            if (!isNaN(result) && !isNaN(diff)) {
-              parsFromPlayer[idx] = result - diff;
-              validHoleCount++;
-            }
-          }
-        });
-
-        if (validHoleCount > 0) {
-          // Fill in any missing values
-          for (let i = 0; i < player.PlayerResults.length; i++) {
-            if (parsFromPlayer[i] === undefined) {
-              parsFromPlayer[i] = 3; // Default
-            }
-          }
-
-          parValues = parsFromPlayer;
-          break;
-        }
-      }
-    }
-
-    // Last resort - default to all par 3
-    if (parValues.length === 0) {
-      parValues = Array(18).fill(3);
-    }
   }
 
-  return parValues;
+  // If for some reason Tracks data is not found, return default par 3 for all holes
+  return Array(18).fill(3);
 }
 
 function calculateScoreDistribution(results, selectedWeek, activeView) {
@@ -210,7 +159,7 @@ function calculateScoreDistribution(results, selectedWeek, activeView) {
   };
 
   // Get course par values each hole - more comprehensive approach
-  const parValues = extractParValues(results, selectedWeek, activeView);
+  const parValues = extractParValues(results);
 
   // Process all scores
   rounds.forEach((player) => {

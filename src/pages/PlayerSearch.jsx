@@ -484,8 +484,8 @@ function PlayerSearch() {
 
   // Process individual round results
   const processRoundResults = (playerResults, yearData) => {
-    // Extract par values - similar to what we did in ScoreDistribution component
-    const parValues = extractParValues(playerResults);
+    // Extract par values from Tracks data
+    const parValues = extractParValues();
 
     // Process each hole's score
     playerResults.forEach((hole, idx) => {
@@ -516,31 +516,31 @@ function PlayerSearch() {
     });
   };
 
-  // Extract par values from results (similar to ScoreDistribution component)
-  const extractParValues = (playerResults) => {
-    // Try to calculate par from Result and Diff
-    const parValues = [];
-
-    if (playerResults && playerResults.length > 0) {
-      // Calculate par as Result - Diff for each hole
-      parValues.push(
-        ...playerResults.map((hole) => {
-          const result = parseInt(hole.Result, 10);
-          const diff = parseInt(hole.Diff, 10);
-          if (!isNaN(result) && !isNaN(diff)) {
-            return result - diff;
-          }
-          return 3; // Default if calculation fails
-        })
-      );
+  // Extract par values from Tracks data
+  const extractParValues = () => {
+    // Check if we have access to the Tracks data in playerData
+    if (playerData && playerData.yearData) {
+      // Look through all years to find one with Tracks data
+      for (const year of Object.keys(playerData.yearData)) {
+        const yearInfo = playerData.yearData[year];
+        if (
+          yearInfo.rawData &&
+          yearInfo.rawData.Competition &&
+          yearInfo.rawData.Competition.Tracks &&
+          yearInfo.rawData.Competition.Tracks.length > 0
+        ) {
+          // Extract par values directly from Tracks data
+          return yearInfo.rawData.Competition.Tracks.map((track) => {
+            // Parse par value, default to 3 if not available or not a number
+            const par = parseInt(track.Par, 10);
+            return isNaN(par) ? 3 : par;
+          });
+        }
+      }
     }
 
-    // If we couldn't calculate any par values, default to par 3
-    if (parValues.length === 0) {
-      return Array(18).fill(3);
-    }
-
-    return parValues;
+    // If no Tracks data is found, return default par 3 for all holes
+    return Array(18).fill(3);
   };
 
   const handlePlayerSelect = (player) => {

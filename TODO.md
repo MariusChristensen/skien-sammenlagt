@@ -2,7 +2,14 @@
 
 ## 🥇 Top Priority
 
-- Fix API calls to get 2022 hole-by-hole information for weekly and sammenlagt stats/aces
+- Handle 2022 data completeness issue:
+  - Option 1: Create a pre-processing script to fetch all 24 weeks of 2022 data and compile into a static JSON file
+  - Option 2: Implement smart/lazy loading for 2022 data with clear UI indicators
+  - Option 3: Use a hybrid approach with a representative sample of weeks from 2022
+
+## Completed
+
+- ✅ Use Tracks data for par values instead of calculating from Result and Diff data
 
 ## UI & Feature Improvements
 
@@ -14,10 +21,17 @@
 - Create heatmaps showing hole difficulty across competitions
 - Implement player search functionality
 - Add proper error boundaries and fallbacks
-- Implement caching for API data
+- Implement caching for API data (especially important for 2022 data if using on-demand loading)
 - Consider improving Score Distribution to show per-hole data in addition to overall distribution
 
 ## 📝 Project Notes
+
+- 2022 data has a different API structure (TourResults/Events format):
+
+  - Main competition ID only provides overall scores, not hole-by-hole data
+  - Would require 24 separate API calls (one per week) to get complete hole-by-hole data
+  - Need to balance data completeness vs. performance concerns
+  - Consider localStorage caching once data is fetched to avoid repeat API calls
 
 - Routing and statistics page refactored and improved
 - Ace Hall of Fame implemented and positioned above stats table
@@ -39,4 +53,4 @@
 - Removed unused props and cleaned up codebase after refactor
 - Improved color logic for above-par scores (+1, +2, +3+)
 - Score Distribution component added to show breakdown of eagles, birdies, pars, etc.
-- Fixed par value calculation by deriving from Result and Diff data
+- Par values now sourced directly from Tracks data in the API
