@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { COMPETITIONS } from "../constants/competitions";
 import LoadingSpinner from "../components/LoadingSpinner";
 
@@ -236,147 +236,152 @@ function PlayerSearch() {
     if (selectedPlayer) {
       fetchPlayerDetailedData(selectedPlayer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlayer, selectedYear]);
 
   // Fetch detailed player data when a player is selected
-  const fetchPlayerDetailedData = async (player) => {
-    if (!player) return;
+  const fetchPlayerDetailedData = useCallback(
+    async (player) => {
+      if (!player) return;
 
-    setLoading(true);
-    setError(null);
-    setPlayerData(null);
+      setLoading(true);
+      setError(null);
+      setPlayerData(null);
 
-    try {
-      // We'll need to fetch data for this player from each year they participated
-      const playerYears =
-        selectedYear === "all" ? player.years : [selectedYear];
+      try {
+        // We'll need to fetch data for this player from each year they participated
+        const playerYears =
+          selectedYear === "all" ? player.years : [selectedYear];
 
-      const playerDetailedData = {
-        name: player.name,
-        years: {},
-        overall: {
-          totalRounds: 0,
-          holeAverages: [],
-          scoreDistribution: {
-            "-2": 0, // Eagle or better
-            "-1": 0, // Birdie
-            0: 0, // Par
-            1: 0, // Bogey
-            2: 0, // Double Bogey
-            "3+": 0, // Triple+ Bogey
-            total: 0,
+        const playerDetailedData = {
+          name: player.name,
+          years: {},
+          overall: {
+            totalRounds: 0,
+            holeAverages: [],
+            scoreDistribution: {
+              "-2": 0, // Eagle or better
+              "-1": 0, // Birdie
+              0: 0, // Par
+              1: 0, // Bogey
+              2: 0, // Double Bogey
+              "3+": 0, // Triple+ Bogey
+              total: 0,
+            },
           },
-        },
-      };
+        };
 
-      let successfulYears = 0;
-      let skippedYears = [];
+        let successfulYears = 0;
+        let skippedYears = [];
 
-      // For each year, fetch competition data and extract player's results
-      for (const year of playerYears) {
-        try {
-          // Skip 2022 data which has a different structure without hole data
-          if (year === "2022") {
-            skippedYears.push(year);
-            continue;
-          }
-
-          const COMPETITION_ID = COMPETITIONS[year].id;
-          const API_URL = `https://discgolfmetrix.com/api.php?content=result&id=${COMPETITION_ID}`;
-
-          const response = await fetch(API_URL);
-          if (!response.ok) continue;
-
-          const data = await response.json();
-
-          // Check both primary name and alternative names
-          const allPlayerNames = player.altNames || [player.name];
-          const yearData = await processPlayerYearData(data, allPlayerNames);
-
-          // Skip years with no rounds
-          if (yearData.totalRounds === 0) {
-            continue;
-          }
-
-          // Store the year data and update overall stats
-          playerDetailedData.years[year] = yearData;
-          successfulYears++;
-
-          // Add to overall statistics
-          playerDetailedData.overall.totalRounds += yearData.totalRounds;
-
-          // Combine score distribution
-          Object.keys(yearData.scoreDistribution).forEach((key) => {
-            if (key !== "total") {
-              playerDetailedData.overall.scoreDistribution[key] +=
-                yearData.scoreDistribution[key];
+        // For each year, fetch competition data and extract player's results
+        for (const year of playerYears) {
+          try {
+            // Skip 2022 data which has a different structure without hole data
+            if (year === "2022") {
+              skippedYears.push(year);
+              continue;
             }
-          });
-          playerDetailedData.overall.scoreDistribution.total +=
-            yearData.scoreDistribution.total;
 
-          // Average the hole averages (will need to weight by rounds played)
-          // This is a simplified version - a more accurate calculation would weight by rounds
-          if (playerDetailedData.overall.holeAverages.length === 0) {
-            playerDetailedData.overall.holeAverages = [
-              ...yearData.holeAverages,
-            ];
-          } else {
-            // Only combine if lengths match (same number of holes)
-            if (
-              playerDetailedData.overall.holeAverages.length ===
-              yearData.holeAverages.length
-            ) {
-              playerDetailedData.overall.holeAverages =
-                playerDetailedData.overall.holeAverages.map((avg, idx) => {
-                  const yearAvg = yearData.holeAverages[idx];
-                  return avg !== null && yearAvg !== null
-                    ? (avg + yearAvg) / 2 // Simple average for now
-                    : avg !== null
-                    ? avg
-                    : yearAvg;
-                });
+            const COMPETITION_ID = COMPETITIONS[year].id;
+            const API_URL = `https://discgolfmetrix.com/api.php?content=result&id=${COMPETITION_ID}`;
+
+            const response = await fetch(API_URL);
+            if (!response.ok) continue;
+
+            const data = await response.json();
+
+            // Check both primary name and alternative names
+            const allPlayerNames = player.altNames || [player.name];
+            const yearData = await processPlayerYearData(data, allPlayerNames);
+
+            // Skip years with no rounds
+            if (yearData.totalRounds === 0) {
+              continue;
             }
+
+            // Store the year data and update overall stats
+            playerDetailedData.years[year] = yearData;
+            successfulYears++;
+
+            // Add to overall statistics
+            playerDetailedData.overall.totalRounds += yearData.totalRounds;
+
+            // Combine score distribution
+            Object.keys(yearData.scoreDistribution).forEach((key) => {
+              if (key !== "total") {
+                playerDetailedData.overall.scoreDistribution[key] +=
+                  yearData.scoreDistribution[key];
+              }
+            });
+            playerDetailedData.overall.scoreDistribution.total +=
+              yearData.scoreDistribution.total;
+
+            // Average the hole averages (will need to weight by rounds played)
+            // This is a simplified version - a more accurate calculation would weight by rounds
+            if (playerDetailedData.overall.holeAverages.length === 0) {
+              playerDetailedData.overall.holeAverages = [
+                ...yearData.holeAverages,
+              ];
+            } else {
+              // Only combine if lengths match (same number of holes)
+              if (
+                playerDetailedData.overall.holeAverages.length ===
+                yearData.holeAverages.length
+              ) {
+                playerDetailedData.overall.holeAverages =
+                  playerDetailedData.overall.holeAverages.map((avg, idx) => {
+                    const yearAvg = yearData.holeAverages[idx];
+                    return avg !== null && yearAvg !== null
+                      ? (avg + yearAvg) / 2 // Simple average for now
+                      : avg !== null
+                      ? avg
+                      : yearAvg;
+                  });
+              }
+            }
+          } catch (yearErr) {
+            // Just log the error for this year but continue processing other years
+            console.error(
+              `Error processing ${year} for ${player.name}:`,
+              yearErr
+            );
           }
-        } catch (yearErr) {
-          // Just log the error for this year but continue processing other years
-          console.error(
-            `Error processing ${year} for ${player.name}:`,
-            yearErr
-          );
         }
-      }
 
-      if (successfulYears > 0) {
-        // Add skipped years info to the player data
-        playerDetailedData.skippedYears = skippedYears;
-        setPlayerData(playerDetailedData);
-      } else {
-        if (
-          skippedYears.length > 0 &&
-          skippedYears.length === playerYears.length
-        ) {
-          // All requested years were skipped
-          setError(
-            `Spillerdata for ${player.name} i ${skippedYears.join(
-              ", "
-            )} kan ikke vises med detaljert hullstatistikk.`
-          );
+        if (successfulYears > 0) {
+          // Add skipped years info to the player data
+          playerDetailedData.skippedYears = skippedYears;
+          setPlayerData(playerDetailedData);
         } else {
-          setError(
-            `Kunne ikke hente spillerdata for ${player.name}${
-              selectedYear !== "all" ? ` for ${selectedYear}` : ""
-            }`
-          );
+          if (
+            skippedYears.length > 0 &&
+            skippedYears.length === playerYears.length
+          ) {
+            // All requested years were skipped
+            setError(
+              `Spillerdata for ${player.name} i ${skippedYears.join(
+                ", "
+              )} kan ikke vises med detaljert hullstatistikk.`
+            );
+          } else {
+            setError(
+              `Kunne ikke hente spillerdata for ${player.name}${
+                selectedYear !== "all" ? ` for ${selectedYear}` : ""
+              }`
+            );
+          }
         }
+      } catch (err) {
+        setError("Kunne ikke hente spillerdata");
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError("Kunne ikke hente spillerdata");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedYear]
+  );
 
   // Process a single year's data for a player - now using an array of possible player names
   const processPlayerYearData = async (data, playerNames) => {
@@ -518,28 +523,7 @@ function PlayerSearch() {
 
   // Extract par values from Tracks data
   const extractParValues = () => {
-    // Check if we have access to the Tracks data in playerData
-    if (playerData && playerData.yearData) {
-      // Look through all years to find one with Tracks data
-      for (const year of Object.keys(playerData.yearData)) {
-        const yearInfo = playerData.yearData[year];
-        if (
-          yearInfo.rawData &&
-          yearInfo.rawData.Competition &&
-          yearInfo.rawData.Competition.Tracks &&
-          yearInfo.rawData.Competition.Tracks.length > 0
-        ) {
-          // Extract par values directly from Tracks data
-          return yearInfo.rawData.Competition.Tracks.map((track) => {
-            // Parse par value, default to 3 if not available or not a number
-            const par = parseInt(track.Par, 10);
-            return isNaN(par) ? 3 : par;
-          });
-        }
-      }
-    }
-
-    // If no Tracks data is found, return default par 3 for all holes
+    // Just return default par 3 for all holes
     return Array(18).fill(3);
   };
 
@@ -851,23 +835,93 @@ function PlayerSearch() {
                   )}
                 </div>
 
-                {/* Year by Year Performance Summary */}
+                {/* Beste runde (Best Round) Section */}
                 <div className="col-span-1 lg:col-span-2 bg-white rounded-lg shadow p-4">
                   <h4 className="text-lg font-bold text-[#800000] mb-4">
-                    Utvikling over tid
+                    {selectedYear === "all"
+                      ? "Beste runde noengang"
+                      : `Beste runde ${selectedYear}`}
                   </h4>
                   {Object.keys(playerData.years).length > 0 ? (
-                    <div>
-                      <p className="mb-2">
-                        Total antall runder: {playerData.overall.totalRounds}
-                      </p>
+                    <div className="space-y-6">
+                      {/* Best round overall (all years) */}
+                      {selectedYear === "all" &&
+                        (() => {
+                          // Find best round across all years
+                          let bestRound = null;
+                          let bestScore = Infinity;
+                          Object.values(playerData.years).forEach(
+                            (yearData) => {
+                              yearData.rounds.forEach((round) => {
+                                // Check if round is complete (has 18 holes with results)
+                                const isComplete =
+                                  round.results.length === 18 &&
+                                  round.results.every(
+                                    (hole) => hole?.Result !== undefined
+                                  );
 
-                      {selectedYear === "all" && (
-                        <p className="text-gray-500 italic text-center">
-                          Graf med spillerrating og utvikling over tid kommer i
-                          en fremtidig oppdatering.
-                        </p>
-                      )}
+                                if (!isComplete) return; // Skip incomplete rounds
+
+                                const total = round.results.reduce(
+                                  (sum, h) => sum + (Number(h.Result) || 0),
+                                  0
+                                );
+                                if (total < bestScore) {
+                                  bestScore = total;
+                                  bestRound = round;
+                                }
+                              });
+                            }
+                          );
+                          return bestRound ? (
+                            <div>
+                              <BestRoundScorecard round={bestRound} />
+                            </div>
+                          ) : (
+                            <div className="text-center text-gray-500">
+                              Ingen komplette runder funnet
+                            </div>
+                          );
+                        })()}
+                      {/* Best round for selected year */}
+                      {selectedYear !== "all" &&
+                      playerData.years[selectedYear] &&
+                      playerData.years[selectedYear].rounds.length > 0 ? (
+                        (() => {
+                          const yearRounds =
+                            playerData.years[selectedYear].rounds;
+                          let bestRound = null;
+                          let bestScore = Infinity;
+                          yearRounds.forEach((round) => {
+                            // Check if round is complete (has 18 holes with results)
+                            const isComplete =
+                              round.results.length === 18 &&
+                              round.results.every(
+                                (hole) => hole?.Result !== undefined
+                              );
+
+                            if (!isComplete) return; // Skip incomplete rounds
+
+                            const total = round.results.reduce(
+                              (sum, h) => sum + (Number(h.Result) || 0),
+                              0
+                            );
+                            if (total < bestScore) {
+                              bestScore = total;
+                              bestRound = round;
+                            }
+                          });
+                          return bestRound ? (
+                            <div>
+                              <BestRoundScorecard round={bestRound} />
+                            </div>
+                          ) : null;
+                        })()
+                      ) : selectedYear !== "all" ? (
+                        <div className="text-center text-gray-500">
+                          Ingen runder funnet for {selectedYear}
+                        </div>
+                      ) : null}
                     </div>
                   ) : (
                     <p className="text-center text-gray-500">
@@ -880,6 +934,234 @@ function PlayerSearch() {
           ) : null}
         </div>
       )}
+    </div>
+  );
+}
+
+// Component to display a single best round's scorecard
+function BestRoundScorecard({ round }) {
+  if (!round || !round.results) return null;
+  const holeResults = round.results;
+
+  // Calculate total score
+  const totalScore = holeResults.reduce((sum, hole) => {
+    return sum + (hole?.Result ? Number(hole.Result) : 0);
+  }, 0);
+
+  // Calculate score relative to par
+  // First try to use Diff values if available, otherwise calculate based on par 3
+  const relativeToPar = holeResults.reduce((sum, hole) => {
+    if (hole?.Diff !== undefined) {
+      return sum + Number(hole.Diff);
+    } else if (hole?.Result) {
+      // Default to par 3 if Diff not available
+      return sum + (Number(hole.Result) - 3);
+    }
+    return sum;
+  }, 0);
+
+  // Format relative to par for display
+  const formattedRelativeToPar =
+    relativeToPar === 0
+      ? "E"
+      : relativeToPar > 0
+      ? `+${relativeToPar}`
+      : `${relativeToPar}`;
+
+  return (
+    <div>
+      {/* Desktop Table View - hidden on small screens */}
+      <div className="hidden md:block">
+        <div className="overflow-x-auto">
+          <table className="border-collapse w-full">
+            <thead>
+              <tr>
+                <th className="border border-gray-400 px-2 py-1 text-left">
+                  Dato
+                </th>
+                {Array.from({ length: 18 }).map((_, index) => (
+                  <th
+                    key={index}
+                    className="border border-gray-400 px-1 py-1 text-center font-medium"
+                  >
+                    {index + 1}
+                  </th>
+                ))}
+                <th className="border border-gray-400 px-2 py-1 text-center">
+                  +/-
+                </th>
+                <th className="border border-gray-400 px-2 py-1 text-center">
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-gray-400 px-2 py-1 whitespace-nowrap">
+                  {round.date
+                    ? new Date(round.date).toLocaleDateString("no-NO")
+                    : round.week || "Ukjent dato"}
+                </td>
+                {Array.from({ length: 18 }).map((_, index) => {
+                  const holeData = holeResults[index];
+                  const score = holeData?.Result;
+                  const diff = holeData?.Diff;
+                  let bgColor = "";
+
+                  // Color coding based on diff or absolute score if diff is not available
+                  if (diff !== undefined) {
+                    if (diff < 0) bgColor = "bg-green-200";
+                    else if (diff === 1) bgColor = "bg-red-100";
+                    else if (diff === 2) bgColor = "bg-red-300";
+                    else if (diff >= 3) bgColor = "bg-red-500";
+                    if (score === "1") bgColor = "bg-yellow-300";
+                  } else if (score !== undefined) {
+                    // Fallback coloring if diff is not available
+                    if (score === "1") bgColor = "bg-yellow-300";
+                    else if (Number(score) < 3) bgColor = "bg-green-200";
+                    else if (Number(score) === 3) bgColor = "";
+                    else if (Number(score) === 4) bgColor = "bg-red-100";
+                    else if (Number(score) === 5) bgColor = "bg-red-300";
+                    else if (Number(score) >= 6) bgColor = "bg-red-500";
+                  }
+
+                  return (
+                    <td
+                      key={index}
+                      className={`border border-gray-400 px-2 py-1 text-center ${bgColor}`}
+                    >
+                      {score !== undefined ? score : "-"}
+                    </td>
+                  );
+                })}
+                <td
+                  className={`border border-gray-400 px-2 py-1 text-center font-semibold ${
+                    relativeToPar < 0
+                      ? "text-green-600"
+                      : relativeToPar > 0
+                      ? "text-red-600"
+                      : ""
+                  }`}
+                >
+                  {formattedRelativeToPar}
+                </td>
+                <td className="border border-gray-400 px-2 py-1 text-center font-semibold">
+                  {totalScore}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Mobile Grid View - hidden on medium screens and up */}
+      <div className="block md:hidden border rounded-lg p-2 shadow-sm bg-gray-50 max-w-xl mx-auto">
+        {/* Date row */}
+        <div className="text-sm text-gray-600 mb-2">
+          {round.date
+            ? new Date(round.date).toLocaleDateString("no-NO")
+            : round.week || "Ukjent dato"}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          {/* First row: holes 1-9 */}
+          <div className="grid grid-cols-9 gap-1">
+            {Array.from({ length: 9 }).map((_, hIdx) => {
+              const holeData = holeResults[hIdx];
+              const score = holeData?.Result;
+              const diff = holeData?.Diff;
+              let bgColor = "";
+
+              // Color coding based on diff or absolute score if diff is not available
+              if (diff !== undefined) {
+                if (diff < 0) bgColor = "bg-green-200";
+                else if (diff === 1) bgColor = "bg-red-100";
+                else if (diff === 2) bgColor = "bg-red-300";
+                else if (diff >= 3) bgColor = "bg-red-500";
+                if (score === "1") bgColor = "bg-yellow-300";
+              } else if (score !== undefined) {
+                // Fallback coloring if diff is not available
+                if (score === "1") bgColor = "bg-yellow-300";
+                else if (Number(score) < 3) bgColor = "bg-green-200";
+                else if (Number(score) === 3) bgColor = "";
+                else if (Number(score) === 4) bgColor = "bg-red-100";
+                else if (Number(score) === 5) bgColor = "bg-red-300";
+                else if (Number(score) >= 6) bgColor = "bg-red-500";
+              }
+
+              return (
+                <div
+                  key={hIdx}
+                  className={`aspect-square flex flex-col items-center justify-center border rounded ${bgColor}`}
+                >
+                  <span className="text-[10px] text-gray-500">{hIdx + 1}</span>
+                  <span className="text-xs font-semibold">
+                    {score !== undefined ? score : "-"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Second row: holes 10-18 */}
+          <div className="grid grid-cols-9 gap-1">
+            {Array.from({ length: 9 }).map((_, hIdx) => {
+              const holeIndex = hIdx + 9;
+              const holeData = holeResults[holeIndex];
+              const score = holeData?.Result;
+              const diff = holeData?.Diff;
+              let bgColor = "";
+
+              // Color coding based on diff or absolute score if diff is not available
+              if (diff !== undefined) {
+                if (diff < 0) bgColor = "bg-green-200";
+                else if (diff === 1) bgColor = "bg-red-100";
+                else if (diff === 2) bgColor = "bg-red-300";
+                else if (diff >= 3) bgColor = "bg-red-500";
+                if (score === "1") bgColor = "bg-yellow-300";
+              } else if (score !== undefined) {
+                // Fallback coloring if diff is not available
+                if (score === "1") bgColor = "bg-yellow-300";
+                else if (Number(score) < 3) bgColor = "bg-green-200";
+                else if (Number(score) === 3) bgColor = "";
+                else if (Number(score) === 4) bgColor = "bg-red-100";
+                else if (Number(score) === 5) bgColor = "bg-red-300";
+                else if (Number(score) >= 6) bgColor = "bg-red-500";
+              }
+
+              return (
+                <div
+                  key={holeIndex}
+                  className={`aspect-square flex flex-col items-center justify-center border rounded ${bgColor}`}
+                >
+                  <span className="text-[10px] text-gray-500">
+                    {holeIndex + 1}
+                  </span>
+                  <span className="text-xs font-semibold">
+                    {score !== undefined ? score : "-"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Score summary row */}
+          <div className="flex justify-between mt-1 font-semibold pr-1 pt-1 border-t border-gray-200">
+            <div
+              className={`${
+                relativeToPar < 0
+                  ? "text-green-600"
+                  : relativeToPar > 0
+                  ? "text-red-600"
+                  : ""
+              }`}
+            >
+              {formattedRelativeToPar}
+            </div>
+            <div>Total: {totalScore}</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
