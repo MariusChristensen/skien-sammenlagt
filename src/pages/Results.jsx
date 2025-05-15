@@ -1,4 +1,4 @@
-import ResultsContainer from "../components/ResultsContainer";
+import ResultsContainer from "../components/results/ResultsContainer";
 
 function Results() {
   return <ResultsContainer />;
