@@ -200,21 +200,27 @@ function StatisticsContainer() {
             <div className="text-center text-red-500 p-4">
               Feil ved henting av data: {error}
             </div>
-          ) : averages.length === 0 && is2022 && isUkentlig ? (
-            <div className="text-center p-4">
-              <p className="text-gray-600 mb-4">
-                Detaljert statistikk for enkeltuke i 2022 er ikke tilgjengelig.
+          ) : is2022 ? (
+            <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg my-4 text-center">
+              <p className="font-semibold">
+                Hullstatistikk er ikke tilgjengelig for 2022 pga.
+                API-begrensninger.
               </p>
-              {metrixEventId && (
+              <p className="mt-2">
                 <a
-                  href={`https://discgolfmetrix.com/?u=score&ID=${metrixEventId}`}
+                  href={`https://discgolfmetrix.com/?u=${
+                    isUkentlig && metrixEventId
+                      ? "score&ID=" + metrixEventId
+                      : "tournament&id=" + COMPETITIONS["2022"].id
+                  }`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-blue-500 hover:underline"
+                  className="text-blue-600 hover:underline"
                 >
-                  Se ukens resultater på Disc Golf Metrix →
+                  Se {isUkentlig ? "ukens resultater" : "konkurransen"} på Disc
+                  Golf Metrix
                 </a>
-              )}
+              </p>
             </div>
           ) : averages.length === 0 ? (
             <div className="text-center text-gray-600 p-4">

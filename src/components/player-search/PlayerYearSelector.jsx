@@ -10,7 +10,7 @@ function PlayerYearSelector({ selectedYear, setSelectedYear, availableYears }) {
         <button
           className={`py-2 px-4 rounded-lg ${
             selectedYear === "all"
-              ? "bg-blue-600 text-white"
+              ? "bg-[#800000] text-white"
               : "bg-gray-200 text-gray-800 hover:bg-gray-300"
           }`}
           onClick={() => setSelectedYear("all")}
@@ -22,7 +22,7 @@ function PlayerYearSelector({ selectedYear, setSelectedYear, availableYears }) {
             key={year}
             className={`py-2 px-4 rounded-lg ${
               selectedYear === year
-                ? "bg-blue-600 text-white"
+                ? "bg-[#800000] text-white"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
             onClick={() => setSelectedYear(year)}
