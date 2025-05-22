@@ -698,8 +698,8 @@ function PlayerSearchContainer() {
 
       // Use par values from the track if available, otherwise use the API's par
       let par = 3; // Default par
-      if (parValues && parValues[idx]) {
-        par = parValues[idx];
+      if (parValues && parValues.parValues && parValues.parValues[idx]) {
+        par = parValues.parValues[idx];
       } else if (hole.Par) {
         try {
           const parsedPar = parseInt(hole.Par, 10);
@@ -769,18 +769,31 @@ function PlayerSearchContainer() {
   const extractParValues = (tracks) => {
     if (!tracks || tracks.length === 0) return null;
 
+    let parValuesArray = [];
+
     // Try to get par values directly from track objects
     if (tracks[0].Par !== undefined) {
-      return tracks.map((track) => parseInt(track.Par, 10) || 3);
+      parValuesArray = tracks.map((track) => parseInt(track.Par, 10) || 3);
     }
-
     // Fall back to the old structure with Holes array
-    if (tracks[0].Holes) {
-      return tracks[0].Holes.map((hole) => parseInt(hole.Par, 10) || 3);
+    else if (tracks[0].Holes) {
+      parValuesArray = tracks[0].Holes.map(
+        (hole) => parseInt(hole.Par, 10) || 3
+      );
+    }
+    // Return null if no par values found
+    else {
+      return null;
     }
 
-    // Return null if no par values found
-    return null;
+    // Calculate total par
+    const totalPar = parValuesArray.reduce((sum, par) => sum + par, 0);
+
+    // Return an object with both the array and the total
+    return {
+      parValues: parValuesArray,
+      totalPar,
+    };
   };
 
   const handlePlayerSelect = (player) => {
