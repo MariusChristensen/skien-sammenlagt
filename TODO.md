@@ -2,6 +2,10 @@
 
 ## 🥇 Top Priority
 
+- Fix the "Alex-problem"
+
+  - Figure how how to concatenate players, so that people who change their name doesnt get 2-3 users.
+
 - Handle 2022 data completeness issue:
 
   - Option 1: Create a pre-processing script to fetch all 24 weeks of 2022 data and compile into a static JSON file
