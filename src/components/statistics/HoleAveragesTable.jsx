@@ -76,7 +76,7 @@ function HoleAveragesTable({ averages, title, results }) {
 
     return (
       <span
-        className={`font-semibold font-mono px-3 py-1 rounded-full text-sm font-bold ${bgColor}`}
+        className={`font-mono px-3 py-1 rounded-full text-sm font-bold ${bgColor}`}
       >
         {avg ? avg.toFixed(2) : "-"}
       </span>
