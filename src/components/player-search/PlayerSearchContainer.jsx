@@ -256,6 +256,25 @@ function PlayerSearchContainer() {
       setLoading(true);
       setError(null);
 
+      const fetchYearData = async (year, player) => {
+        try {
+          const COMPETITION_ID = COMPETITIONS[year].id;
+          const API_URL = `https://discgolfmetrix.com/api.php?content=result&id=${COMPETITION_ID}`;
+
+          const response = await fetch(API_URL);
+          if (!response.ok) {
+            return null;
+          }
+
+          const data = await response.json();
+
+          const processedData = processPlayerYearData(data, player.altNames);
+          return processedData;
+        } catch {
+          return null;
+        }
+      };
+
       try {
         const yearDataArray = [];
 
@@ -293,26 +312,8 @@ function PlayerSearchContainer() {
     };
 
     fetchPlayerData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlayer, selectedYear]);
-
-  const fetchYearData = async (year, player) => {
-    try {
-      const COMPETITION_ID = COMPETITIONS[year].id;
-      const API_URL = `https://discgolfmetrix.com/api.php?content=result&id=${COMPETITION_ID}`;
-
-      const response = await fetch(API_URL);
-      if (!response.ok) {
-        return null;
-      }
-
-      const data = await response.json();
-
-      const processedData = processPlayerYearData(data, player.altNames);
-      return processedData;
-    } catch {
-      return null;
-    }
-  };
 
   const processPlayerYearData = (data, playerNames) => {
     if (!data?.Competition) return null;
