@@ -1,5 +1,3 @@
-import React from "react";
-
 const WeeklyResultsTable = ({ players, className, selectedWeek }) => (
   <div className="overflow-x-auto">
     <table className="border-collapse w-full">

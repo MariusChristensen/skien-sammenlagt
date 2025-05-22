@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import OverallLeaderboard from "./OverallLeaderboard";
-import YearDropdown from "./YearDropdown";
-import WeekDropdown from "./WeekDropdown";
-import ClassSelector from "./ClassSelector";
-import ViewToggle from "./ViewToggle";
+import YearDropdown from "../common/YearDropdown";
+import WeekDropdown from "../common/WeekDropdown";
+import ClassSelector from "../common/ClassSelector";
+import ViewToggle from "../common/ViewToggle";
 import WeeklyResults from "./WeeklyResults";
-import { COMPETITIONS } from "../constants/competitions";
+import { COMPETITIONS } from "../../constants/competitions";
 
 // Available years (in reverse chronological order)
 const AVAILABLE_YEARS = Object.keys(COMPETITIONS).sort().reverse();

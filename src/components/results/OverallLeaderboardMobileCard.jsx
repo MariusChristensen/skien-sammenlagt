@@ -1,5 +1,3 @@
-import React from "react";
-
 const OverallLeaderboardMobileCard = ({ players, displayWeekCount }) => (
   <div className="space-y-4">
     {players.map((player, index) => (

@@ -1,4 +1,3 @@
-import React from "react";
 import WeeklyResultsTable from "./WeeklyResultsTable";
 import WeeklyResultsMobileCard from "./WeeklyResultsMobileCard";
 

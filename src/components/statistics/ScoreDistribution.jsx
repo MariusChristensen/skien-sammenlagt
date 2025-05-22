@@ -1,5 +1,3 @@
-import React from "react";
-
 function ScoreDistribution({ results, selectedWeek, activeView }) {
   if (!results?.Competition) return null;
 
@@ -18,7 +16,7 @@ function ScoreDistribution({ results, selectedWeek, activeView }) {
     );
   }
 
-  // Sort the distribution keys in ascending order (eagle, birdie, par, bogey, etc.)
+  // Score labels for display
   const scoreLabels = {
     "-2": "Ace/Eagle",
     "-1": "Birdie",
@@ -26,6 +24,16 @@ function ScoreDistribution({ results, selectedWeek, activeView }) {
     1: "Bogey",
     2: "Double Bogey",
     "3+": "Triple+",
+  };
+
+  // Color mapping for score types
+  const colorMap = {
+    "-2": { bg: "bg-indigo-200", text: "text-indigo-800" },
+    "-1": { bg: "bg-blue-200", text: "text-blue-800" },
+    0: { bg: "bg-green-200", text: "text-green-800" },
+    1: { bg: "bg-yellow-200", text: "text-yellow-800" },
+    2: { bg: "bg-orange-200", text: "text-orange-800" },
+    "3+": { bg: "bg-red-200", text: "text-red-800" },
   };
 
   return (
@@ -41,36 +49,16 @@ function ScoreDistribution({ results, selectedWeek, activeView }) {
           // Calculate percentage
           const percentage = ((count / distribution.total) * 100).toFixed(1);
 
-          // Determine color based on score type
-          let bgColor = "bg-gray-200";
-          let textColor = "text-gray-800";
-
-          if (score === "-2") {
-            bgColor = "bg-indigo-200";
-            textColor = "text-indigo-800";
-          } else if (score === "-1") {
-            bgColor = "bg-blue-200";
-            textColor = "text-blue-800";
-          } else if (score === "0") {
-            bgColor = "bg-green-200";
-            textColor = "text-green-800";
-          } else if (score === "1") {
-            bgColor = "bg-yellow-200";
-            textColor = "text-yellow-800";
-          } else if (score === "2") {
-            bgColor = "bg-orange-200";
-            textColor = "text-orange-800";
-          } else if (score === "3+") {
-            bgColor = "bg-red-200";
-            textColor = "text-red-800";
-          }
+          // Get colors from the map or default to gray
+          const { bg = "bg-gray-200", text = "text-gray-800" } =
+            colorMap[score] || {};
 
           return (
             <div
               key={score}
-              className={`${bgColor} rounded-lg p-3 text-center shadow-sm`}
+              className={`${bg} rounded-lg p-3 text-center shadow-sm`}
             >
-              <div className={`font-bold ${textColor}`}>
+              <div className={`font-bold ${text}`}>
                 {scoreLabels[score] || score}
               </div>
               <div className="text-2xl font-bold mt-1">{count}</div>
@@ -124,20 +112,24 @@ function getPlayerRounds(results, selectedWeek, activeView) {
 
 // Helper function to extract par values from Tracks data
 function extractParValues(results) {
-  // Extract par values directly from Tracks data
-  if (
-    results.Competition &&
-    results.Competition.Tracks &&
-    results.Competition.Tracks.length > 0
-  ) {
-    return results.Competition.Tracks.map((track) => {
-      // Parse par value, default to 3 if not available or not a number
-      const par = parseInt(track.Par, 10);
-      return isNaN(par) ? 3 : par;
-    });
+  // Extract par values directly from Competition.Tracks
+  const tracks = results.Competition?.Tracks;
+
+  if (tracks && tracks.length > 0) {
+    // Create par values array by directly accessing the Par property
+    const parValues = [];
+    for (const track of tracks) {
+      if (track && track.Par) {
+        const par = parseInt(track.Par, 10);
+        parValues.push(isNaN(par) ? 3 : par);
+      } else {
+        parValues.push(3); // Default to 3 if missing
+      }
+    }
+
+    return parValues;
   }
 
-  // If for some reason Tracks data is not found, return default par 3 for all holes
   return Array(18).fill(3);
 }
 
@@ -158,8 +150,18 @@ function calculateScoreDistribution(results, selectedWeek, activeView) {
     total: 0,
   };
 
-  // Get course par values each hole - more comprehensive approach
-  const parValues = extractParValues(results);
+  // Hard-coded known par values for Skogerveien in Skien
+  // Holes: 1-4 = par 3, 5 = par 4, 6-9 = par 3, 10-11 = par 3, 12 = par 4, 13-18 = par 3
+  const hardcodedPars = [3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3];
+
+  // Try to get par values from API first, fall back to hardcoded values if needed
+  let parValues = extractParValues(results);
+
+  // Check if the API par values look correct (not all 3s)
+  const allThrees = parValues.every((val) => val === 3);
+  if (allThrees) {
+    parValues = hardcodedPars;
+  }
 
   // Process all scores
   rounds.forEach((player) => {

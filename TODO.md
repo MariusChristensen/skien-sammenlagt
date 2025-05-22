@@ -3,9 +3,12 @@
 ## 🥇 Top Priority
 
 - Handle 2022 data completeness issue:
+
   - Option 1: Create a pre-processing script to fetch all 24 weeks of 2022 data and compile into a static JSON file
   - Option 2: Implement smart/lazy loading for 2022 data with clear UI indicators
   - Option 3: Use a hybrid approach with a representative sample of weeks from 2022
+
+  - Fixing Alex fuckup
 
 ## Completed
 
