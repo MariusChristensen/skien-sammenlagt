@@ -1,5 +1,3 @@
-import React from "react";
-
 const ViewToggle = ({
   activeView,
   onChange,
@@ -11,7 +9,9 @@ const ViewToggle = ({
   <div className="flex space-x-2 w-full sm:w-auto justify-center sm:justify-start">
     <button
       className={`px-4 py-2 rounded-md transition-colors ${
-        activeView === leftValue ? "bg-[#800000] text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+        activeView === leftValue
+          ? "bg-[#800000] text-white"
+          : "bg-gray-200 text-gray-800 hover:bg-gray-300"
       }`}
       onClick={() => onChange(leftValue)}
     >
@@ -19,7 +19,9 @@ const ViewToggle = ({
     </button>
     <button
       className={`px-4 py-2 rounded-md transition-colors ${
-        activeView === rightValue ? "bg-[#800000] text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+        activeView === rightValue
+          ? "bg-[#800000] text-white"
+          : "bg-gray-200 text-gray-800 hover:bg-gray-300"
       }`}
       onClick={() => onChange(rightValue)}
     >

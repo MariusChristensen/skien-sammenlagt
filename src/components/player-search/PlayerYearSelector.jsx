@@ -1,5 +1,3 @@
-import React from "react";
-
 function PlayerYearSelector({ selectedYear, setSelectedYear, availableYears }) {
   return (
     <div className="mb-6">

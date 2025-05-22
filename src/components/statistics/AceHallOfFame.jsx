@@ -1,5 +1,3 @@
-import React from "react";
-
 function AceHallOfFame({ results }) {
   // Only search for aces if we have SubCompetitions (2020-2021, 2023+)
   if (!results?.Competition?.SubCompetitions) return null;

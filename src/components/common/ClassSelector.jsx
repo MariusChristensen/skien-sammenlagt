@@ -1,5 +1,3 @@
-import React from "react";
-
 const ClassSelector = ({ classes, selectedClass, onChange }) => (
   <div className="flex flex-wrap gap-2 p-4 border-t border-gray-200 justify-center">
     <button

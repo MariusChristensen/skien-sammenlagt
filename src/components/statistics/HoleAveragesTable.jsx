@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 function HoleAveragesTable({ averages, title, results }) {
   const [mobileCols, setMobileCols] = useState(6);

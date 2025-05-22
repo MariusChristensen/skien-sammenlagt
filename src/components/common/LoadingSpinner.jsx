@@ -1,5 +1,3 @@
-import React from "react";
-
 function LoadingSpinner({ text = "Laster..." }) {
   return (
     <div className="flex flex-col items-center justify-center py-6">

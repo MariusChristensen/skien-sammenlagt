@@ -1,5 +1,3 @@
-import React from "react";
-
 function BestRoundScorecard({ round }) {
   // Make sure we have valid hole data
   if (

@@ -1,4 +1,3 @@
-import React from "react";
 import BestRoundScorecard from "./BestRoundScorecard";
 
 function PlayerStats({ player, playerData, selectedYear }) {

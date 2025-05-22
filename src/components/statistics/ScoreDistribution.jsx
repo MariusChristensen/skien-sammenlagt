@@ -1,5 +1,3 @@
-import React from "react";
-
 function ScoreDistribution({ results, selectedWeek, activeView }) {
   if (!results?.Competition) return null;
 

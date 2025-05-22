@@ -1,5 +1,3 @@
-import React from "react";
-
 const getWeekLabel = (name, idx) => {
   let afterArrow = null;
   if (name.includes("&rarr;")) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { COMPETITIONS } from "../../constants/competitions";
 import LoadingSpinner from "../common/LoadingSpinner";
 import PlayerList from "./PlayerList";
