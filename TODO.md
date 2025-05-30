@@ -2,7 +2,7 @@
 
 ## 🥇 Top Priority
 
-- Fix this issue: incomplete rounds counting as best rounds
+- Fix this issue: incomplete rounds counting as best rounds: Gotta add some logic to only count completed rounds. Was sure i had that somewhere, but randomly search players and found someone with his best round ever being one that he just did 8 holes then DNF'ed
 
 - Handle 2022 data completeness issue:
 
