@@ -29,8 +29,9 @@ function PlayerSearchContainer() {
         // First, collect all unique players from all years
         const allPlayers = new Map(); // Use Map to track unique players by name
 
-        // Fetch players from each year
-        for (const year of AVAILABLE_YEARS) {
+        // Fetch players from each year (process chronologically to get most recent names)
+        const yearsChronological = AVAILABLE_YEARS.slice().reverse(); // Process from oldest to newest
+        for (const year of yearsChronological) {
           try {
             const COMPETITION_ID = COMPETITIONS[year].id;
             const API_URL = `https://discgolfmetrix.com/api.php?content=result&id=${COMPETITION_ID}`;
@@ -47,73 +48,25 @@ function PlayerSearchContainer() {
 
                 week.Results.forEach((player) => {
                   const playerName = player.Name;
-                  if (!playerName) return; // Skip if no name
+                  const userID = player.UserID;
 
-                  // Check if we have this exact name already
-                  if (!allPlayers.has(playerName)) {
-                    // Check for similar names (name changes) - for example, "Marius" and "Marius Skårdal"
-                    let foundSimilarName = false;
+                  if (!playerName || !userID) return; // Skip if no name or UserID
 
-                    // This requires at least two name parts to match OR a very high similarity
-                    for (const [
-                      existingName,
-                      existingPlayer,
-                    ] of allPlayers.entries()) {
-                      const nameParts = playerName.toLowerCase().split(" ");
-                      const existingParts = existingName
-                        .toLowerCase()
-                        .split(" ");
-
-                      // Count matching name parts
-                      const matchingParts = nameParts.filter((part) =>
-                        existingParts.includes(part)
-                      );
-
-                      // Require at least 2 matching name parts when both names have at least 2 parts
-                      if (
-                        matchingParts.length >= 2 &&
-                        nameParts.length >= 2 &&
-                        existingParts.length >= 2
-                      ) {
-                        // Consider this the same player with a name variation
-                        existingPlayer.altNames.add(playerName);
-                        existingPlayer.years.add(year);
-                        existingPlayer.classes.add(
-                          player.ClassName || "Unknown"
-                        );
-                        foundSimilarName = true;
-                        break;
-                      }
-
-                      // Special case for single-part names - only match if they're identical
-                      if (
-                        nameParts.length === 1 &&
-                        existingParts.length === 1 &&
-                        nameParts[0] === existingParts[0]
-                      ) {
-                        existingPlayer.altNames.add(playerName);
-                        existingPlayer.years.add(year);
-                        existingPlayer.classes.add(
-                          player.ClassName || "Unknown"
-                        );
-                        foundSimilarName = true;
-                        break;
-                      }
-                    }
-
-                    if (!foundSimilarName) {
-                      // New player we haven't seen before
-                      allPlayers.set(playerName, {
-                        name: playerName,
-                        id: player.PlayerID || player.ID || playerName, // Fallback to name if no ID
-                        altNames: new Set([playerName]), // Alternative names
-                        classes: new Set([player.ClassName || "Unknown"]),
-                        years: new Set([year]),
-                      });
-                    }
+                  // Group by UserID instead of name
+                  if (!allPlayers.has(userID)) {
+                    // New player we haven't seen before
+                    allPlayers.set(userID, {
+                      name: playerName, // This will be the most recent name
+                      id: userID,
+                      altNames: new Set([playerName]), // Track all names they've used
+                      classes: new Set([player.ClassName || "Unknown"]),
+                      years: new Set([year]),
+                    });
                   } else {
                     // Update existing player data
-                    const existingPlayer = allPlayers.get(playerName);
+                    const existingPlayer = allPlayers.get(userID);
+                    existingPlayer.altNames.add(playerName); // Add this name variant
+                    existingPlayer.name = playerName; // Update to most recent name
                     existingPlayer.classes.add(player.ClassName || "Unknown");
                     existingPlayer.years.add(year);
                   }
@@ -124,67 +77,25 @@ function PlayerSearchContainer() {
             else if (data?.Competition?.TourResults) {
               data.Competition.TourResults.forEach((player) => {
                 const playerName = player.Name;
-                if (!playerName) return; // Skip if no name
+                const userID = player.UserID;
 
-                // Check if we have this exact name already
-                if (!allPlayers.has(playerName)) {
-                  // Check for similar names (name changes)
-                  let foundSimilarName = false;
+                if (!playerName || !userID) return; // Skip if no name or UserID
 
-                  // This requires at least two name parts to match OR a very high similarity
-                  for (const [
-                    existingName,
-                    existingPlayer,
-                  ] of allPlayers.entries()) {
-                    const nameParts = playerName.toLowerCase().split(" ");
-                    const existingParts = existingName.toLowerCase().split(" ");
-
-                    // Count matching name parts
-                    const matchingParts = nameParts.filter((part) =>
-                      existingParts.includes(part)
-                    );
-
-                    // Require at least 2 matching name parts when both names have at least 2 parts
-                    if (
-                      matchingParts.length >= 2 &&
-                      nameParts.length >= 2 &&
-                      existingParts.length >= 2
-                    ) {
-                      // Consider this the same player with a name variation
-                      existingPlayer.altNames.add(playerName);
-                      existingPlayer.years.add(year);
-                      existingPlayer.classes.add(player.ClassName || "Unknown");
-                      foundSimilarName = true;
-                      break;
-                    }
-
-                    // Special case for single-part names - only match if they're identical
-                    if (
-                      nameParts.length === 1 &&
-                      existingParts.length === 1 &&
-                      nameParts[0] === existingParts[0]
-                    ) {
-                      existingPlayer.altNames.add(playerName);
-                      existingPlayer.years.add(year);
-                      existingPlayer.classes.add(player.ClassName || "Unknown");
-                      foundSimilarName = true;
-                      break;
-                    }
-                  }
-
-                  if (!foundSimilarName) {
-                    // New player we haven't seen before
-                    allPlayers.set(playerName, {
-                      name: playerName,
-                      id: player.PlayerID || player.ID || playerName, // Fallback to name if no ID
-                      altNames: new Set([playerName]), // Alternative names
-                      classes: new Set([player.ClassName || "Unknown"]),
-                      years: new Set([year]),
-                    });
-                  }
+                // Group by UserID instead of name
+                if (!allPlayers.has(userID)) {
+                  // New player we haven't seen before
+                  allPlayers.set(userID, {
+                    name: playerName, // This will be the most recent name
+                    id: userID,
+                    altNames: new Set([playerName]), // Track all names they've used
+                    classes: new Set([player.ClassName || "Unknown"]),
+                    years: new Set([year]),
+                  });
                 } else {
                   // Update existing player data
-                  const existingPlayer = allPlayers.get(playerName);
+                  const existingPlayer = allPlayers.get(userID);
+                  existingPlayer.altNames.add(playerName); // Add this name variant
+                  existingPlayer.name = playerName; // Update to most recent name
                   existingPlayer.classes.add(player.ClassName || "Unknown");
                   existingPlayer.years.add(year);
                 }
