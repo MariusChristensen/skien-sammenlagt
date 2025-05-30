@@ -2,6 +2,8 @@
 
 ## 🥇 Top Priority
 
+- Fix this issue: incomplete rounds counting as best rounds
+
 - Handle 2022 data completeness issue:
 
   - Option 1: Create a pre-processing script to fetch all 24 weeks of 2022 data and compile into a static JSON file
