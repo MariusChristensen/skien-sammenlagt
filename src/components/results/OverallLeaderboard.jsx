@@ -79,13 +79,11 @@ const OverallLeaderboard = ({
         }
       });
 
-      // Choose the longest name for each player (usually the most complete name)
+      // Choose the most recent name for each player (last one encountered)
       Object.keys(mergedPlayerNames).forEach((userId) => {
-        mergedPlayerNames[userId] = mergedPlayerNames[userId].reduce(
-          (longest, current) =>
-            current.length > longest.length ? current : longest,
-          ""
-        );
+        // The last name in the array is the most recent (since we process years chronologically)
+        const names = mergedPlayerNames[userId];
+        mergedPlayerNames[userId] = names[names.length - 1];
       });
 
       // We need to process each event separately
@@ -185,6 +183,32 @@ const OverallLeaderboard = ({
       const subCompetitions = results.Competition.SubCompetitions;
       eventCount = subCompetitions.length;
 
+      // Keep track of merged players to ensure we use consistent names
+      const mergedPlayerNames = {};
+
+      // First pass - gather all names for each UserID across all weeks
+      subCompetitions.forEach((competition) => {
+        if (!competition.Results) return;
+
+        competition.Results.forEach((player) => {
+          if (player.UserID) {
+            if (!mergedPlayerNames[player.UserID]) {
+              mergedPlayerNames[player.UserID] = [];
+            }
+            if (!mergedPlayerNames[player.UserID].includes(player.Name)) {
+              mergedPlayerNames[player.UserID].push(player.Name);
+            }
+          }
+        });
+      });
+
+      // Choose the most recent name for each player (last one encountered)
+      Object.keys(mergedPlayerNames).forEach((userId) => {
+        // The last name in the array is the most recent (since we process years chronologically)
+        const names = mergedPlayerNames[userId];
+        mergedPlayerNames[userId] = names[names.length - 1];
+      });
+
       // Process each subcompetition (weekly event)
       subCompetitions.forEach((competition, weekIndex) => {
         if (!competition.Results) return;
@@ -197,13 +221,17 @@ const OverallLeaderboard = ({
         if (hasActualScores) {
           // Calculate points for each player in this week
           competition.Results.forEach((player) => {
-            const playerName = player.Name;
+            if (!player.UserID) return; // Skip players without UserID
+
             const playerID = player.UserID;
             const playerClass = player.ClassName || "Unknown";
             const points = calculatePoints(player.Place);
 
             // Skip if filtering by class and this player is in a different class
             if (selectedClass && playerClass !== selectedClass) return;
+
+            // Use the consistent name for this player
+            const playerName = mergedPlayerNames[playerID] || player.Name;
 
             // Initialize player in our tracking object if first encounter
             if (!playerScores[playerID]) {

@@ -8,11 +8,10 @@
   - Option 2: Implement smart/lazy loading for 2022 data with clear UI indicators
   - Option 3: Use a hybrid approach with a representative sample of weeks from 2022
 
-  - Fixing Alex fuckup
-
 ## Completed
 
 - ✅ Use Tracks data for par values instead of calculating from Result and Diff data
+- ✅ Fix the "Alex-problem" - Player name consolidation using UserID instead of name matching
 
 ## UI & Feature Improvements
 
