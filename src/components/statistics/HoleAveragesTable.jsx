@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 
 function HoleAveragesTable({ averages, title, results }) {
-  const [mobileCols, setMobileCols] = useState(6);
   const [parValues, setParValues] = useState([]);
 
   // Extract par values from results
   useEffect(() => {
     if (!results?.Competition?.Tracks || !averages.length) {
+      // Fallback to par 3 for each hole if data is missing
       setParValues(Array(averages.length).fill(3));
       return;
     }
 
-    // Try to get par values directly from track objects
     const extractedPars = [];
+
+    // Try to get par values directly from track objects
     for (const track of results.Competition.Tracks) {
       if (track && track.Par) {
         const par = parseInt(track.Par, 10);
@@ -36,40 +37,22 @@ function HoleAveragesTable({ averages, title, results }) {
     }
   }, [results, averages]);
 
-  // Handle mobile layout responsiveness
-  useEffect(() => {
-    function handleResize() {
-      setMobileCols(window.innerWidth < 375 ? 4 : 6);
-    }
-    handleResize(); // set on mount
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
+  // Don't render if no averages available
   if (!averages || averages.length === 0) return null;
 
-  // Helper to split array into chunks
-  function chunkArray(arr, size) {
-    const result = [];
-    for (let i = 0; i < arr.length; i += size) {
-      result.push(arr.slice(i, i + size));
-    }
-    return result;
-  }
-
-  // Get color based on relation to par
+  // Get background color based on score's relation to par
   function getColorRelativeToPar(score, par) {
     if (score === null || par === null) return "bg-gray-200";
     const relativeToPar = score - par;
 
     if (relativeToPar < -0.5) return "bg-green-200"; // Well under par
     if (relativeToPar < 0) return "bg-green-100"; // Slightly under par
-    if (relativeToPar < 0.5) return "bg-yellow-200"; // At par or slightly over
-    if (relativeToPar < 1.5) return "bg-orange-100"; // Over par
+    if (relativeToPar < 0.5) return "bg-yellow-200"; // At or near par
+    if (relativeToPar < 1.5) return "bg-orange-100"; // Slightly over par
     return "bg-red-100"; // Well over par
   }
 
-  // Reusable score display component
+  // Component to display average score with dynamic styling
   const ScoreDisplay = ({ avg, holeIdx }) => {
     const par = parValues[holeIdx] || 3;
     const bgColor = getColorRelativeToPar(avg, par);
@@ -85,13 +68,14 @@ function HoleAveragesTable({ averages, title, results }) {
 
   return (
     <div className="mb-6 bg-white rounded-lg shadow p-4">
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-[#800000]">
           {title || "Hullgjennomsnitt"}
         </h3>
       </div>
 
-      {/* Desktop/tablet view */}
+      {/* Desktop/tablet view (table layout) */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-center">
           <thead>
@@ -124,29 +108,19 @@ function HoleAveragesTable({ averages, title, results }) {
         </table>
       </div>
 
-      {/* Mobile view */}
-      <div className="sm:hidden">
-        <div className="flex flex-col gap-2">
-          {chunkArray(averages, mobileCols).map((chunk, rowIdx) => (
-            <div className="flex gap-2" key={rowIdx}>
-              {chunk.map((avg, idx) => {
-                const holeNumber = rowIdx * mobileCols + idx + 1;
-
-                return (
-                  <div
-                    key={holeNumber}
-                    className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-lg py-2"
-                  >
-                    <span className="text-xs text-gray-500 mb-1">
-                      {holeNumber}
-                    </span>
-                    <ScoreDisplay avg={avg} holeIdx={holeNumber - 1} />
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+      {/* Mobile view (responsive grid layout) */}
+      <div className="sm:hidden grid grid-cols-3 xs:grid-cols-4 gap-2">
+        {averages.map((avg, idx) => (
+          <div
+            key={idx}
+            className="flex flex-col items-center justify-center bg-gray-50 rounded-lg py-2"
+          >
+            {/* Hole number */}
+            <span className="text-xs text-gray-500 mb-1">{idx + 1}</span>
+            {/* Average score */}
+            <ScoreDisplay avg={avg} holeIdx={idx} />
+          </div>
+        ))}
       </div>
     </div>
   );
