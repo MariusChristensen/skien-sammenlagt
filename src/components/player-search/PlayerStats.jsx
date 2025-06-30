@@ -16,6 +16,24 @@ const isCompleteRound = (round) => {
   return validHoles.length === 18;
 };
 
+// Helper to detect 3 or more par+4 holes in a row (likely DNF)
+const hasConsecutiveParPlus4 = (round, threshold = 3) => {
+  if (!round || !round.holes || round.holes.length !== 18) return false;
+
+  let streak = 0;
+
+  for (const hole of round.holes) {
+    if (hole.result === hole.par + 4) {
+      streak++;
+      if (streak >= threshold) return true;
+    } else {
+      streak = 0;
+    }
+  }
+
+  return false;
+};
+
 function PlayerStats({ player, playerData, selectedYear }) {
   if (!player || !playerData || playerData.length === 0) return null;
 
@@ -39,12 +57,18 @@ function PlayerStats({ player, playerData, selectedYear }) {
 
   playerData.forEach((yearData) => {
     if (yearData.totalRounds) totalRounds += yearData.totalRounds;
-    if (yearData.weeksPlayed) totalWeeksPlayed += yearData.weeksPlayed;
 
     // Ensure numeric conversion for totalScore
-    if (yearData.totalScore !== undefined && yearData.totalScore !== null) {
-      const score = Number(yearData.totalScore);
-      if (!isNaN(score)) totalScore += score;
+    if (
+      yearData.bestRound &&
+      isCompleteRound(yearData.bestRound) &&
+      !hasConsecutiveParPlus4(yearData.bestRound)
+    ) {
+      const score = Number(yearData.bestRound.result);
+      if (!isNaN(score)) {
+        totalScore += score;
+        totalWeeksPlayed++;
+      }
     }
 
     // Aggregate score distribution data across all years
@@ -86,7 +110,8 @@ function PlayerStats({ player, playerData, selectedYear }) {
     if (
       yearData.bestRound &&
       yearData.bestRound.result &&
-      isCompleteRound(yearData.bestRound)
+      isCompleteRound(yearData.bestRound) &&
+      !hasConsecutiveParPlus4(yearData.worstRound)
     ) {
       // Validate the result is a proper score (not empty, null, or zero)
       const bestScore = Number(yearData.bestRound.result);
@@ -127,7 +152,8 @@ function PlayerStats({ player, playerData, selectedYear }) {
     if (
       yearData.worstRound &&
       yearData.worstRound.result &&
-      isCompleteRound(yearData.worstRound)
+      isCompleteRound(yearData.worstRound) &&
+      !hasConsecutiveParPlus4(yearData.worstRound)
     ) {
       // Validate the result is a proper score (not empty, null, or zero)
       const worstScore = Number(yearData.worstRound.result);
@@ -420,6 +446,13 @@ function PlayerStats({ player, playerData, selectedYear }) {
                         <span className="font-semibold text-gray-900">
                           {formattedScore}
                         </span>
+                        {result.holes &&
+                          isCompleteRound(result) &&
+                          hasConsecutiveParPlus4(result) && (
+                            <span className="text-xs text-red-600 ml-2">
+                              (DNF?)
+                            </span>
+                          )}
                       </td>
                     </tr>
                   );
