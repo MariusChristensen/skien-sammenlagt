@@ -1,5 +1,21 @@
 import BestRoundScorecard from "./BestRoundScorecard";
 
+// Helper to check if a round is complete
+const isCompleteRound = (round) => {
+  if (!round || !Array.isArray(round.holes)) return false;
+
+  const validHoles = round.holes.filter(
+    (hole) =>
+      hole &&
+      typeof hole.number === "number" &&
+      typeof hole.result === "number" &&
+      typeof hole.par === "number" &&
+      typeof hole.diff === "number"
+  );
+
+  return validHoles.length === 18;
+};
+
 function PlayerStats({ player, playerData, selectedYear }) {
   if (!player || !playerData || playerData.length === 0) return null;
 
@@ -67,7 +83,11 @@ function PlayerStats({ player, playerData, selectedYear }) {
     if (yearData.triples) totalTriples += yearData.triples;
 
     // Find best round across all years - prioritize relation to par
-    if (yearData.bestRound && yearData.bestRound.result) {
+    if (
+      yearData.bestRound &&
+      yearData.bestRound.result &&
+      isCompleteRound(yearData.bestRound)
+    ) {
       // Validate the result is a proper score (not empty, null, or zero)
       const bestScore = Number(yearData.bestRound.result);
       if (!isNaN(bestScore) && bestScore > 0) {
@@ -104,7 +124,11 @@ function PlayerStats({ player, playerData, selectedYear }) {
     }
 
     // Find worst round across all years
-    if (yearData.worstRound && yearData.worstRound.result) {
+    if (
+      yearData.worstRound &&
+      yearData.worstRound.result &&
+      isCompleteRound(yearData.worstRound)
+    ) {
       // Validate the result is a proper score (not empty, null, or zero)
       const worstScore = Number(yearData.worstRound.result);
       if (!isNaN(worstScore) && worstScore > 0) {
