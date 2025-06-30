@@ -2,8 +2,6 @@
 
 ## 🥇 Top Priority
 
-- Fix this issue: incomplete rounds counting as best rounds
-
 - Handle 2022 data completeness issue:
 
   - Option 1: Create a pre-processing script to fetch all 24 weeks of 2022 data and compile into a static JSON file
@@ -12,6 +10,7 @@
 
 ## Completed
 
+- ✅ Fix this issue: incomplete rounds counting as best rounds
 - ✅ Use Tracks data for par values instead of calculating from Result and Diff data
 - ✅ Fix the "Alex-problem" - Player name consolidation using UserID instead of name matching
 
