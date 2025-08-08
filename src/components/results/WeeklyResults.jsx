@@ -45,7 +45,7 @@ const WeeklyResults = ({
         <p className="mt-2">
           For detaljerte ukentlige resultater, besøk:{" "}
           <a
-            href={`https://discgolfmetrix.com/${eventIdForSelectedWeek}`}
+            href={`https://discgolfmetrix.com/?u=score&ID=${eventIdForSelectedWeek}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-500 hover:underline"

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { extractParValuesFromResults } from "../../utils/helpers";
 import { COMPETITIONS } from "../../constants/competitions";
 import LoadingSpinner from "../common/LoadingSpinner";
 import PlayerList from "./PlayerList";
@@ -130,30 +131,28 @@ function PlayerSearchContainer() {
   }, []);
 
   // Update filtered players when search term changes
+  // Debounced search filtering
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredPlayers(players);
-      return;
-    }
-
-    const normalizedSearchTerm = searchTerm.toLowerCase().trim();
-    const filtered = players.filter((player) => {
-      // Check primary name
-      if (player.name.toLowerCase().includes(normalizedSearchTerm)) {
-        return true;
+    const handle = setTimeout(() => {
+      if (!searchTerm.trim()) {
+        setFilteredPlayers(players);
+        return;
       }
-
-      // Check alternative names
-      for (const altName of player.altNames) {
-        if (altName.toLowerCase().includes(normalizedSearchTerm)) {
+      const normalizedSearchTerm = searchTerm.toLowerCase().trim();
+      const filtered = players.filter((player) => {
+        if (player.name.toLowerCase().includes(normalizedSearchTerm)) {
           return true;
         }
-      }
-
-      return false;
-    });
-
-    setFilteredPlayers(filtered);
+        for (const altName of player.altNames) {
+          if (altName.toLowerCase().includes(normalizedSearchTerm)) {
+            return true;
+          }
+        }
+        return false;
+      });
+      setFilteredPlayers(filtered);
+    }, 200);
+    return () => clearTimeout(handle);
   }, [searchTerm, players]);
 
   // When a player is selected, fetch their data for the selected year
@@ -166,22 +165,20 @@ function PlayerSearchContainer() {
     const fetchPlayerData = async () => {
       setLoading(true);
       setError(null);
-
+      const controller = new AbortController();
       const fetchYearData = async (year, player) => {
         try {
           const COMPETITION_ID = COMPETITIONS[year].id;
           const API_URL = `https://discgolfmetrix.com/api.php?content=result&id=${COMPETITION_ID}`;
-
-          const response = await fetch(API_URL);
+          const response = await fetch(API_URL, { signal: controller.signal });
           if (!response.ok) {
             return null;
           }
-
           const data = await response.json();
-
           const processedData = processPlayerYearData(data, player.altNames);
           return processedData;
-        } catch {
+        } catch (e) {
+          if (e.name === "AbortError") return null;
           return null;
         }
       };
@@ -256,9 +253,8 @@ function PlayerSearchContainer() {
     ) {
       // For 2020-2021, 2023+
       const allWeeks = data.Competition.SubCompetitions;
-      // Get par values from the competition if available
-      const tracks = data.Competition.Tracks || [];
-      const parValues = tracks.length > 0 ? extractParValues(tracks) : null;
+      // Prefer competition-level par values as a fallback only; week-specific pars will be computed from hole data when available
+      const globalPars = extractParValuesFromResults(data);
 
       // Loop through each week
       allWeeks.forEach((week, weekIdx) => {
@@ -288,25 +284,47 @@ function PlayerSearchContainer() {
           roundResults = processRoundResults(
             playerResult.PlayerResults,
             playerResults,
-            parValues
+            globalPars
           );
         }
 
-        // Use a valid result value, defaulting to totalScore from hole data if Result is missing
+        // Use weekly total strokes: prefer Sum, then computed total from holes, finally Result if needed
         let resultValue = null;
-
-        // Try to get the result from different possible sources
-        if (playerResult.Result !== undefined && playerResult.Result !== null) {
-          resultValue = playerResult.Result.toString();
-        } else if (roundResults.totalScore) {
-          resultValue = roundResults.totalScore.toString();
+        if (
+          playerResult.Sum !== undefined &&
+          playerResult.Sum !== null &&
+          Number(playerResult.Sum) > 0
+        ) {
+          resultValue = String(playerResult.Sum);
+        } else if (
+          roundResults.totalScore &&
+          Number(roundResults.totalScore) > 0
+        ) {
+          resultValue = String(roundResults.totalScore);
+        } else if (
+          playerResult.Result !== undefined &&
+          playerResult.Result !== null &&
+          Number(playerResult.Result) > 0
+        ) {
+          resultValue = String(playerResult.Result);
         }
 
         // Only add valid results
         const resultNum = resultValue ? Number(resultValue) : 0;
-        const relativeToPar = parValues
-          ? resultNum - parValues.totalPar
-          : undefined;
+        // Compute week-specific par if we have hole data; otherwise fall back to global pars
+        let weeklyPar = undefined;
+        if (roundResults.holes && roundResults.holes.length > 0) {
+          weeklyPar = roundResults.holes.reduce(
+            (sum, h) => sum + (h.par || 0),
+            0
+          );
+        } else if (globalPars && Array.isArray(globalPars.parValues)) {
+          weeklyPar = globalPars.parValues.reduce((s, p) => s + p, 0);
+        }
+        const relativeToPar =
+          typeof weeklyPar === "number" && weeklyPar > 0
+            ? resultNum - weeklyPar
+            : undefined;
 
         if (resultValue && !isNaN(resultNum) && resultNum > 0) {
           // Add to weekly results array
@@ -677,35 +695,7 @@ function PlayerSearchContainer() {
     };
   };
 
-  const extractParValues = (tracks) => {
-    if (!tracks || tracks.length === 0) return null;
-
-    let parValuesArray = [];
-
-    // Try to get par values directly from track objects
-    if (tracks[0].Par !== undefined) {
-      parValuesArray = tracks.map((track) => parseInt(track.Par, 10) || 3);
-    }
-    // Fall back to the old structure with Holes array
-    else if (tracks[0].Holes) {
-      parValuesArray = tracks[0].Holes.map(
-        (hole) => parseInt(hole.Par, 10) || 3
-      );
-    }
-    // Return null if no par values found
-    else {
-      return null;
-    }
-
-    // Calculate total par
-    const totalPar = parValuesArray.reduce((sum, par) => sum + par, 0);
-
-    // Return an object with both the array and the total
-    return {
-      parValues: parValuesArray,
-      totalPar,
-    };
-  };
+  // Removed local extractParValues in favor of shared helper
 
   const handlePlayerSelect = (player) => {
     setSelectedPlayer(player);

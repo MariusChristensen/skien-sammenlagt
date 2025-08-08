@@ -59,16 +59,15 @@ function PlayerStats({ player, playerData, selectedYear }) {
     if (yearData.totalRounds) totalRounds += yearData.totalRounds;
 
     // Ensure numeric conversion for totalScore
-    if (
-      yearData.bestRound &&
-      isCompleteRound(yearData.bestRound) &&
-      !hasConsecutiveParPlus4(yearData.bestRound)
-    ) {
-      const score = Number(yearData.bestRound.result);
-      if (!isNaN(score)) {
-        totalScore += score;
-        totalWeeksPlayed++;
-      }
+    // Sum all valid weekly results for averages (not just best round)
+    if (Array.isArray(yearData.weeklyResults)) {
+      yearData.weeklyResults.forEach((week) => {
+        const scoreNum = Number(week.result);
+        if (!isNaN(scoreNum) && scoreNum > 0) {
+          totalScore += scoreNum;
+          totalWeeksPlayed += 1;
+        }
+      });
     }
 
     // Aggregate score distribution data across all years
@@ -111,7 +110,7 @@ function PlayerStats({ player, playerData, selectedYear }) {
       yearData.bestRound &&
       yearData.bestRound.result &&
       isCompleteRound(yearData.bestRound) &&
-      !hasConsecutiveParPlus4(yearData.worstRound)
+      !hasConsecutiveParPlus4(yearData.bestRound)
     ) {
       // Validate the result is a proper score (not empty, null, or zero)
       const bestScore = Number(yearData.bestRound.result);

@@ -35,6 +35,8 @@ const WeekDropdown = ({
     <button
       onClick={() => setIsOpen((open) => !open)}
       className="flex items-center justify-between w-full px-4 py-2 bg-[#800000] text-white rounded-md hover:bg-[#600000] transition-colors"
+      aria-haspopup="listbox"
+      aria-expanded={isOpen}
     >
       <span>
         {weeks && weeks[selectedWeek - indexOffset]
@@ -59,7 +61,10 @@ const WeekDropdown = ({
       </svg>
     </button>
     {isOpen && (
-      <div className="absolute z-20 mt-2 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-72 overflow-y-auto">
+      <div
+        className="absolute z-20 mt-2 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-72 overflow-y-auto"
+        role="listbox"
+      >
         {weeks.map((sub, idx) => {
           const label = getWeekLabel(sub.Name, idx);
           const date = formatDate(sub.Date);
@@ -75,6 +80,8 @@ const WeekDropdown = ({
                   ? "bg-gray-100 font-medium"
                   : ""
               }`}
+              role="option"
+              aria-selected={selectedWeek === idx + indexOffset}
             >
               {label}
               {date ? ` (${date})` : ""}

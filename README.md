@@ -51,12 +51,12 @@ npm run dev
 - `src/pages/Results.jsx` - Results page (overall leaderboard, weekly results)
 - `src/pages/Statistics.jsx` - Statistics page (hole averages, Ace Hall of Fame)
 - `src/pages/PlayerSearch.jsx` - Player search with detailed statistics
-- `src/components/ResultsContainer.jsx` - Main logic for results fetching and view switching
-- `src/components/HoleAveragesTable.jsx` - Responsive, color-coded hole averages table
-- `src/components/ScoreDistribution.jsx` - Component showing the distribution of scores relative to par
-- `src/components/OverallLeaderboard.jsx` - Handles overall leaderboard display and calculations
-- `src/components/WeeklyResultsMobileCard.jsx` - Mobile-friendly weekly results card
-- `src/components/WeeklyResultsTable.jsx` - Desktop weekly results table
+- `src/components/results/ResultsContainer.jsx` - Main logic for results fetching and view switching
+- `src/components/statistics/HoleAveragesTable.jsx` - Responsive, color-coded hole averages table
+- `src/components/statistics/ScoreDistribution.jsx` - Component showing the distribution of scores relative to par
+- `src/components/results/OverallLeaderboard.jsx` - Handles overall leaderboard display and calculations
+- `src/components/results/WeeklyResultsMobileCard.jsx` - Mobile-friendly weekly results card
+- `src/components/results/WeeklyResultsTable.jsx` - Desktop weekly results table
 - `src/constants/competitions.js` - Competition IDs and round counts for each year (edit here to add new years)
 
 ## API Notes & 2022 Data Handling
@@ -76,9 +76,9 @@ To handle the 2022 data challenges while maintaining performance:
 
 1. Overall leaderboard: Works normally with existing data
 2. Weekly results: Shows basic scores with links to Metrix for detailed hole-by-hole data
-3. Statistics: Currently limited, with plans to implement one of the following:
-   - Pre-processed static data file generated from all 24 weeks
-   - Smart loading approach with user-triggered data fetching
+3. Statistics: Currently limited, with options to implement one of the following:
+   - Pre-processed static data file generated from all 24 weeks (build-time)
+   - Smart loading approach with user-triggered progressive fetching and caching
    - Hybrid approach using representative sample weeks
 
 ### Points System

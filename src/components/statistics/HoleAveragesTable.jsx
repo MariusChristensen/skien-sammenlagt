@@ -1,40 +1,21 @@
 import { useEffect, useState } from "react";
+import { extractParValuesFromResults } from "../../utils/helpers";
 
 function HoleAveragesTable({ averages, title, results }) {
   const [parValues, setParValues] = useState([]);
 
   // Extract par values from results
   useEffect(() => {
-    if (!results?.Competition?.Tracks || !averages.length) {
-      // Fallback to par 3 for each hole if data is missing
-      setParValues(Array(averages.length).fill(3));
+    if (!averages.length) {
+      setParValues([]);
       return;
     }
-
-    const extractedPars = [];
-
-    // Try to get par values directly from track objects
-    for (const track of results.Competition.Tracks) {
-      if (track && track.Par) {
-        const par = parseInt(track.Par, 10);
-        extractedPars.push(isNaN(par) ? 3 : par);
-      } else {
-        extractedPars.push(3); // Default to 3 if missing
-      }
-    }
-
-    // If no par values found and Holes structure exists, try that
-    if (extractedPars.length === 0 && results.Competition.Tracks[0]?.Holes) {
-      const holesParValues = results.Competition.Tracks[0].Holes.map(
-        (h) => parseInt(h.Par, 10) || 3
-      );
-      setParValues(holesParValues);
-    } else if (extractedPars.length > 0) {
-      setParValues(extractedPars);
-    } else {
-      // Fallback to all par 3s
-      setParValues(Array(averages.length).fill(3));
-    }
+    const { parValues } = extractParValuesFromResults(results || {});
+    // Fit to the number of averages we have
+    const sized = parValues.length
+      ? parValues.slice(0, averages.length)
+      : Array(averages.length).fill(3);
+    setParValues(sized);
   }, [results, averages]);
 
   // Don't render if no averages available

@@ -1,3 +1,5 @@
+import { getHoleBgColor } from "../../utils/helpers";
+
 const WeeklyResultsTable = ({ players, className, selectedWeek }) => (
   <div className="overflow-x-auto">
     <table className="border-collapse w-full">
@@ -41,14 +43,11 @@ const WeeklyResultsTable = ({ players, className, selectedWeek }) => (
                   const holeData = holeResults[index];
                   const score = holeData?.Result;
                   const diff = holeData?.Diff;
-                  let bgColor = "";
-                  if (diff !== undefined) {
-                    if (diff < 0) bgColor = "bg-green-200";
-                    else if (diff === 1) bgColor = "bg-red-100";
-                    else if (diff === 2) bgColor = "bg-red-300";
-                    else if (diff >= 3) bgColor = "bg-red-500";
-                    if (score === "1") bgColor = "bg-yellow-300";
-                  }
+                  const numericDiff =
+                    diff !== undefined ? Number(diff) : undefined;
+                  const numericScore =
+                    score !== undefined ? Number(score) : undefined;
+                  const bgColor = getHoleBgColor(numericDiff, numericScore);
                   return (
                     <td
                       key={index}

@@ -1,3 +1,5 @@
+import { getHoleBgColor } from "../../utils/helpers";
+
 const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
   <div className="space-y-4 max-w-xl mx-auto px-2">
     {players.length > 0 ? (
@@ -45,15 +47,13 @@ const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
                   {Array.from({ length: 9 }).map((_, hIdx) => {
                     const holeData = holeResults[hIdx];
                     const score = holeData?.Result;
-                    const diff = holeData?.Diff;
-                    let bgColor = "";
-                    if (diff !== undefined) {
-                      if (diff < 0) bgColor = "bg-green-200";
-                      else if (diff === 1) bgColor = "bg-red-100";
-                      else if (diff === 2) bgColor = "bg-red-300";
-                      else if (diff >= 3) bgColor = "bg-red-500";
-                      if (score === "1") bgColor = "bg-yellow-300";
-                    }
+                    const numericDiff =
+                      holeData?.Diff !== undefined
+                        ? Number(holeData.Diff)
+                        : undefined;
+                    const numericScore =
+                      score !== undefined ? Number(score) : undefined;
+                    const bgColor = getHoleBgColor(numericDiff, numericScore);
                     return (
                       <div
                         key={hIdx}
@@ -75,15 +75,13 @@ const WeeklyResultsMobileCard = ({ players, className, selectedWeek }) => (
                     const holeIndex = hIdx + 9;
                     const holeData = holeResults[holeIndex];
                     const score = holeData?.Result;
-                    const diff = holeData?.Diff;
-                    let bgColor = "";
-                    if (diff !== undefined) {
-                      if (diff < 0) bgColor = "bg-green-200";
-                      else if (diff === 1) bgColor = "bg-red-100";
-                      else if (diff === 2) bgColor = "bg-red-300";
-                      else if (diff >= 3) bgColor = "bg-red-500";
-                      if (score === "1") bgColor = "bg-yellow-300";
-                    }
+                    const numericDiff2 =
+                      holeData?.Diff !== undefined
+                        ? Number(holeData.Diff)
+                        : undefined;
+                    const numericScore2 =
+                      score !== undefined ? Number(score) : undefined;
+                    const bgColor = getHoleBgColor(numericDiff2, numericScore2);
                     return (
                       <div
                         key={holeIndex}

@@ -6,6 +6,7 @@ import HoleAveragesTable from "./HoleAveragesTable";
 import ScoreDistribution from "./ScoreDistribution";
 import AceHallOfFame from "./AceHallOfFame";
 import { COMPETITIONS } from "../../constants/competitions";
+import { fetchJsonCached } from "../../utils/helpers";
 
 const AVAILABLE_YEARS = Object.keys(COMPETITIONS).sort().reverse();
 
@@ -47,19 +48,29 @@ function StatisticsContainer() {
     const COMPETITION_ID = COMPETITIONS[selectedYear].id;
     const API_URL = `https://discgolfmetrix.com/api.php?content=result&id=${COMPETITION_ID}`;
 
+    const controller = new AbortController();
     const fetchData = async () => {
       try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error("Kunne ikke hente data");
-        const data = await response.json();
+        const data = await fetchJsonCached(API_URL, {
+          signal: controller.signal,
+        });
         setResults(data);
       } catch (err) {
+        if (
+          err &&
+          (err.name === "AbortError" ||
+            (typeof err.message === "string" &&
+              err.message.toLowerCase().includes("aborted")))
+        ) {
+          return;
+        }
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
+    return () => controller.abort();
   }, [selectedYear, activeView]);
 
   // Extract weeks from results
