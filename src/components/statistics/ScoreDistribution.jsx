@@ -1,3 +1,5 @@
+import { extractParValuesFromResults } from "../../utils/helpers";
+
 function ScoreDistribution({ results, selectedWeek, activeView }) {
   if (!results?.Competition) return null;
 
@@ -111,27 +113,7 @@ function getPlayerRounds(results, selectedWeek, activeView) {
 }
 
 // Helper function to extract par values from Tracks data
-function extractParValues(results) {
-  // Extract par values directly from Competition.Tracks
-  const tracks = results.Competition?.Tracks;
-
-  if (tracks && tracks.length > 0) {
-    // Create par values array by directly accessing the Par property
-    const parValues = [];
-    for (const track of tracks) {
-      if (track && track.Par) {
-        const par = parseInt(track.Par, 10);
-        parValues.push(isNaN(par) ? 3 : par);
-      } else {
-        parValues.push(3); // Default to 3 if missing
-      }
-    }
-
-    return parValues;
-  }
-
-  return Array(18).fill(3);
-}
+// use shared par extractor
 
 function calculateScoreDistribution(results, selectedWeek, activeView) {
   // Get player rounds
@@ -150,12 +132,30 @@ function calculateScoreDistribution(results, selectedWeek, activeView) {
     total: 0,
   };
 
-  // Hard-coded known par values for Skogerveien in Skien
-  // Holes: 1-4 = par 3, 5 = par 4, 6-9 = par 3, 10-11 = par 3, 12 = par 4, 13-18 = par 3
-  const hardcodedPars = [3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3];
+  // Hard-coded known par values for Skogerveien in Skien (18 holes)
+  const hardcodedPars = [
+    3,
+    3,
+    3,
+    3,
+    4,
+    3,
+    3,
+    3,
+    3, // 1-9
+    3,
+    3,
+    4,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3, // 10-18
+  ];
 
   // Try to get par values from API first, fall back to hardcoded values if needed
-  let parValues = extractParValues(results);
+  let { parValues } = extractParValuesFromResults(results);
 
   // Check if the API par values look correct (not all 3s)
   const allThrees = parValues.every((val) => val === 3);

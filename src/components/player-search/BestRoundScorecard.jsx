@@ -1,3 +1,5 @@
+import { getHoleBgColor } from "../../utils/helpers";
+
 function BestRoundScorecard({ round }) {
   // Make sure we have valid hole data
   if (
@@ -29,17 +31,7 @@ function BestRoundScorecard({ round }) {
   const totalRelativeToPar = totalScore - totalPar;
 
   // Color map to exactly match the results page style
-  const getScoreCellStyle = (diff, score) => {
-    // Special case for hole-in-one
-    if (score === 1) return "bg-yellow-300";
-
-    // Match EXACTLY the weekly results color scheme
-    if (diff < 0) return "bg-green-200"; // Under par
-    if (diff === 1) return "bg-red-100"; // Bogey
-    if (diff === 2) return "bg-red-300"; // Double bogey
-    if (diff >= 3) return "bg-red-500"; // Triple+ bogey
-    return "bg-white"; // Par (default)
-  };
+  const getScoreCellStyle = (diff, score) => getHoleBgColor(diff, score);
 
   // Format date for display
   const formatDate = (dateString) => {

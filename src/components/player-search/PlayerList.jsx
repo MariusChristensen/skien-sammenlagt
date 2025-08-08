@@ -9,9 +9,9 @@ function PlayerList({ isVisible, players, onSelectPlayer }) {
         </div>
       ) : (
         <ul className="divide-y divide-gray-200">
-          {players.map((player, idx) => (
+          {players.map((player) => (
             <li
-              key={idx}
+              key={player.id || player.name}
               className="p-3 hover:bg-gray-100 cursor-pointer"
               onClick={() => onSelectPlayer(player)}
             >

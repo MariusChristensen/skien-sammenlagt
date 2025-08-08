@@ -18,7 +18,10 @@ function Header() {
             FRISBEEKLUBB
           </p>
         </div>
-        <nav className="flex gap-2 mt-4 sm:mt-0 self-center sm:self-auto justify-center">
+        <nav
+          className="flex gap-2 mt-4 sm:mt-0 self-center sm:self-auto justify-center"
+          aria-label="Hovedmeny"
+        >
           <Link to="/" className={linkClass("/")}>
             Resultater
           </Link>

@@ -14,6 +14,8 @@ const YearDropdown = ({
       <button
         onClick={() => setIsOpen((open) => !open)}
         className="flex items-center space-x-2 px-4 py-2 bg-[#800000] text-white rounded-md hover:bg-[#600000] transition-colors min-w-[100px] justify-between w-full sm:w-auto"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
         <span>{selectedYear}</span>
         <svg
@@ -34,7 +36,10 @@ const YearDropdown = ({
       </button>
     </div>
     {isOpen && (
-      <div className="absolute z-10 mt-2 w-full bg-white rounded-md shadow-lg border border-gray-200">
+      <div
+        className="absolute z-10 mt-2 w-full bg-white rounded-md shadow-lg border border-gray-200"
+        role="listbox"
+      >
         {years.map((year) => (
           <button
             key={year}
@@ -45,6 +50,8 @@ const YearDropdown = ({
             className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${
               selectedYear === year ? "bg-gray-100 font-medium" : ""
             }`}
+            role="option"
+            aria-selected={selectedYear === year}
           >
             {year}
           </button>

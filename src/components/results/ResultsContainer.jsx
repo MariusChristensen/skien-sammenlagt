@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { fetchJsonCached } from "../../utils/helpers";
 import OverallLeaderboard from "./OverallLeaderboard";
 import YearDropdown from "../common/YearDropdown";
 import WeekDropdown from "../common/WeekDropdown";
@@ -39,11 +40,12 @@ const ResultsContainer = () => {
     setSelectedWeek(0);
     setAvailableClasses([]);
 
+    const controller = new AbortController();
     const fetchData = async () => {
       try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error("Kunne ikke hente data");
-        const data = await response.json();
+        const data = await fetchJsonCached(API_URL, {
+          signal: controller.signal,
+        });
 
         setResults(data);
 
@@ -59,6 +61,15 @@ const ResultsContainer = () => {
 
         setAvailableClasses(Array.from(classes).sort());
       } catch (err) {
+        // Ignore abort errors (React StrictMode double-invokes effects in dev)
+        if (
+          err &&
+          (err.name === "AbortError" ||
+            (typeof err.message === "string" &&
+              err.message.toLowerCase().includes("aborted")))
+        ) {
+          return;
+        }
         setError(err.message);
       } finally {
         setLoading(false);
@@ -66,6 +77,7 @@ const ResultsContainer = () => {
     };
 
     fetchData();
+    return () => controller.abort();
   }, [API_URL]); // Re-fetch when API_URL changes (which happens when selectedYear changes)
 
   useEffect(() => {
